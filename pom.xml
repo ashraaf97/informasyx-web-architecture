@@ -113,6 +113,12 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+					<layers>
+						<enabled>true</enabled>
+					</layers>
+					<image>
+						<name>${project.artifactId}:${project.version}</name>
+					</image>
 				</configuration>
 			</plugin>
 			<plugin>
