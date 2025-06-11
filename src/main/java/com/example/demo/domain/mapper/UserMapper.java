@@ -1,6 +1,7 @@
 package com.example.demo.domain.mapper;
 
 import com.example.demo.domain.User;
+import com.example.demo.domain.dto.UserCreateDTO;
 import com.example.demo.domain.dto.UserDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,7 +16,7 @@ public interface UserMapper {
     UserDTO toDto(User user);
 
     @Mapping(source = "person", target = "person")
-    User toEntity(UserDTO userDTO);
+    User toEntity(UserCreateDTO userCreateDTO);
 
     List<UserDTO> toDtoList(List<User> users);
 

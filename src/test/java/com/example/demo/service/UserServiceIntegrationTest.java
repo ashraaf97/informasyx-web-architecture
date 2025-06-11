@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.domain.dto.PersonDTO;
+import com.example.demo.domain.dto.UserCreateDTO;
 import com.example.demo.domain.dto.UserDTO;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -32,8 +33,8 @@ class UserServiceIntegrationTest {
         PersonDTO createdPerson = personService.createPerson(personDTO);
         
         // Create a user
-        UserDTO userDTO = new UserDTO(null, "testuser", "password123", createdPerson, true, "USER");
-        UserDTO createdUser = userService.createUser(userDTO);
+        UserCreateDTO userCreateDTO = new UserCreateDTO(null, "testuser", "password123", createdPerson, true, "USER");
+        UserDTO createdUser = userService.createUser(userCreateDTO);
         
         assertNotNull(createdUser.getId());
         assertEquals("testuser", createdUser.getUsername());
@@ -53,17 +54,45 @@ class UserServiceIntegrationTest {
         assertEquals(createdUser.getId(), userByUsernameOpt.get().getId());
         
         // Update
-        retrievedUser.setUsername("updateduser");
-        retrievedUser.getPerson().setFirstName("Updated");
-        UserDTO updatedUser = userService.updateUser(retrievedUser.getId(), retrievedUser);
+        UserCreateDTO updateDTO = new UserCreateDTO(
+            retrievedUser.getId(),
+            "updateduser",
+            "newpassword123",
+            retrievedUser.getPerson(),
+            true,
+            "USER"
+        );
+        
+        // Apply update
+        UserDTO updatedUser = userService.updateUser(retrievedUser.getId(), updateDTO);
         assertEquals("updateduser", updatedUser.getUsername());
-        assertEquals("Updated", updatedUser.getPerson().getFirstName());
         
         // Verify update
         Optional<UserDTO> afterUpdateOpt = userService.getUserById(updatedUser.getId());
         assertTrue(afterUpdateOpt.isPresent());
         assertEquals("updateduser", afterUpdateOpt.get().getUsername());
-        assertEquals("Updated", afterUpdateOpt.get().getPerson().getFirstName());
+        
+        // Update person info via User update
+        PersonDTO updatedPersonDTO = new PersonDTO(
+            updatedUser.getPerson().getId(),
+            "Updated",
+            updatedUser.getPerson().getLastName(),
+            updatedUser.getPerson().getEmail(),
+            updatedUser.getPerson().getPhoneNumber(),
+            updatedUser.getPerson().getAddress()
+        );
+        
+        UserCreateDTO userWithUpdatedPerson = new UserCreateDTO(
+            updatedUser.getId(),
+            updatedUser.getUsername(),
+            "newpassword123",
+            updatedPersonDTO,
+            updatedUser.isActive(),
+            updatedUser.getRoles()
+        );
+        
+        UserDTO userWithUpdatedPersonResult = userService.updateUser(updatedUser.getId(), userWithUpdatedPerson);
+        assertEquals("Updated", userWithUpdatedPersonResult.getPerson().getFirstName());
         
         // Delete
         userService.deleteUser(updatedUser.getId());
@@ -85,14 +114,14 @@ class UserServiceIntegrationTest {
         PersonDTO person2 = personService.createPerson(new PersonDTO(null, "Test", "Two", "test.two@example.com", "987-654-3210", null));
         
         // Create first user
-        UserDTO user1 = new UserDTO(null, "uniqueusername", "password123", person1, true, "USER");
+        UserCreateDTO user1 = new UserCreateDTO(null, "uniqueusername", "password123", person1, true, "USER");
         UserDTO createdUser1 = userService.createUser(user1);
         
         assertNotNull(createdUser1.getId());
         assertEquals("uniqueusername", createdUser1.getUsername());
         
         // Try to create second user with same username - should throw exception
-        UserDTO user2 = new UserDTO(null, "uniqueusername", "password456", person2, true, "USER");
+        UserCreateDTO user2 = new UserCreateDTO(null, "uniqueusername", "password456", person2, true, "USER");
         
         assertThrows(IllegalArgumentException.class, () -> {
             userService.createUser(user2);

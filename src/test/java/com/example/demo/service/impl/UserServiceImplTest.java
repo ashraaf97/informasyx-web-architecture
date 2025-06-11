@@ -3,6 +3,7 @@ package com.example.demo.service.impl;
 import com.example.demo.domain.Person;
 import com.example.demo.domain.User;
 import com.example.demo.domain.dto.PersonDTO;
+import com.example.demo.domain.dto.UserCreateDTO;
 import com.example.demo.domain.dto.UserDTO;
 import com.example.demo.domain.mapper.UserMapper;
 import com.example.demo.domain.repository.UserRepository;
@@ -41,6 +42,7 @@ class UserServiceImplTest {
 
     private User testUser;
     private UserDTO testUserDTO;
+    private UserCreateDTO testUserCreateDTO;
     private Person testPerson;
     private PersonDTO testPersonDTO;
     private List<User> userList;
@@ -53,13 +55,14 @@ class UserServiceImplTest {
         testPersonDTO = new PersonDTO(1L, "John", "Doe", "john.doe@example.com", "123-456-7890", "123 Main St");
         
         testUser = new User(1L, "johndoe", "password123", testPerson, true, "USER");
-        testUserDTO = new UserDTO(1L, "johndoe", "password123", testPersonDTO, true, "USER");
+        testUserDTO = new UserDTO(1L, "johndoe", testPersonDTO, true, "USER");
+        testUserCreateDTO = new UserCreateDTO(1L, "johndoe", "password123", testPersonDTO, true, "USER");
         
         Person person2 = new Person(2L, "Jane", "Smith", "jane.smith@example.com", "987-654-3210", "456 Oak Ave");
         PersonDTO personDTO2 = new PersonDTO(2L, "Jane", "Smith", "jane.smith@example.com", "987-654-3210", "456 Oak Ave");
         
         User user2 = new User(2L, "janesmith", "password456", person2, true, "USER,ADMIN");
-        UserDTO userDTO2 = new UserDTO(2L, "janesmith", "password456", personDTO2, true, "USER,ADMIN");
+        UserDTO userDTO2 = new UserDTO(2L, "janesmith", personDTO2, true, "USER,ADMIN");
         
         userList = Arrays.asList(testUser, user2);
         userDTOList = Arrays.asList(testUserDTO, userDTO2);
@@ -147,19 +150,19 @@ class UserServiceImplTest {
         // Arrange
         when(userRepository.existsByUsername("johndoe")).thenReturn(false);
         when(personService.createPerson(testPersonDTO)).thenReturn(testPersonDTO);
-        when(userMapper.toEntity(testUserDTO)).thenReturn(testUser);
+        when(userMapper.toEntity(testUserCreateDTO)).thenReturn(testUser);
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
         // Act
-        UserDTO result = userService.createUser(testUserDTO);
+        UserDTO result = userService.createUser(testUserCreateDTO);
 
         // Assert
         assertNotNull(result);
         assertEquals(testUserDTO.getUsername(), result.getUsername());
         verify(userRepository, times(1)).existsByUsername("johndoe");
         verify(personService, times(1)).createPerson(testPersonDTO);
-        verify(userMapper, times(1)).toEntity(testUserDTO);
+        verify(userMapper, times(1)).toEntity(testUserCreateDTO);
         verify(userRepository, times(1)).save(any(User.class));
         verify(userMapper, times(1)).toDto(testUser);
     }
@@ -171,7 +174,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            userService.createUser(testUserDTO);
+            userService.createUser(testUserCreateDTO);
         });
         verify(userRepository, times(1)).existsByUsername("johndoe");
         verify(personService, never()).createPerson(any());
@@ -186,12 +189,12 @@ class UserServiceImplTest {
         when(userRepository.findByUsername("johndoe")).thenReturn(Optional.of(testUser));
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(personService.updatePerson(eq(1L), any(PersonDTO.class))).thenReturn(testPersonDTO);
-        when(userMapper.toEntity(testUserDTO)).thenReturn(testUser);
+        when(userMapper.toEntity(testUserCreateDTO)).thenReturn(testUser);
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
         // Act
-        UserDTO result = userService.updateUser(1L, testUserDTO);
+        UserDTO result = userService.updateUser(1L, testUserCreateDTO);
 
         // Assert
         assertNotNull(result);
@@ -200,7 +203,7 @@ class UserServiceImplTest {
         verify(userRepository, times(1)).findByUsername("johndoe");
         verify(userRepository, times(1)).findById(1L);
         verify(personService, times(1)).updatePerson(eq(1L), any(PersonDTO.class));
-        verify(userMapper, times(1)).toEntity(testUserDTO);
+        verify(userMapper, times(1)).toEntity(testUserCreateDTO);
         verify(userRepository, times(1)).save(any(User.class));
         verify(userMapper, times(1)).toDto(testUser);
     }
@@ -212,7 +215,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThrows(EntityNotFoundException.class, () -> {
-            userService.updateUser(99L, testUserDTO);
+            userService.updateUser(99L, testUserCreateDTO);
         });
         verify(userRepository, times(1)).existsById(99L);
         verify(userRepository, never()).findByUsername(any());
@@ -230,7 +233,7 @@ class UserServiceImplTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            userService.updateUser(1L, testUserDTO);
+            userService.updateUser(1L, testUserCreateDTO);
         });
         verify(userRepository, times(1)).existsById(1L);
         verify(userRepository, times(1)).findByUsername("johndoe");

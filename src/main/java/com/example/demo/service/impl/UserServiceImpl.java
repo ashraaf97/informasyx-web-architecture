@@ -3,6 +3,7 @@ package com.example.demo.service.impl;
 import com.example.demo.domain.Person;
 import com.example.demo.domain.User;
 import com.example.demo.domain.dto.PersonDTO;
+import com.example.demo.domain.dto.UserCreateDTO;
 import com.example.demo.domain.dto.UserDTO;
 import com.example.demo.domain.mapper.UserMapper;
 import com.example.demo.domain.repository.UserRepository;
@@ -11,6 +12,7 @@ import com.example.demo.service.UserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,53 +43,59 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO createUser(UserDTO userDTO) {
-        if (userRepository.existsByUsername(userDTO.getUsername())) {
-            throw new IllegalArgumentException("Username already exists: " + userDTO.getUsername());
+    @Transactional
+    public UserDTO createUser(UserCreateDTO userCreateDTO) {
+        if (userRepository.existsByUsername(userCreateDTO.getUsername())) {
+            throw new IllegalArgumentException("Username already exists: " + userCreateDTO.getUsername());
         }
 
-        // Create the person first if it doesn't exist
-        PersonDTO personDTO = null;
-        if (userDTO.getPerson() != null) {
-            personDTO = personService.createPerson(userDTO.getPerson());
+        // Create the person first if it exists
+        if (userCreateDTO.getPerson() != null) {
+            PersonDTO savedPersonDTO = personService.createPerson(userCreateDTO.getPerson());
+            userCreateDTO.setPerson(savedPersonDTO); // Use the fully populated PersonDTO
         }
 
-        User user = userMapper.toEntity(userDTO);
-        if (personDTO != null) {
-            Person person = new Person();
-            person.setId(personDTO.getId());
-            user.setPerson(person);
-        }
-
+        User user = userMapper.toEntity(userCreateDTO);
         User savedUser = userRepository.save(user);
         return userMapper.toDto(savedUser);
     }
 
     @Override
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
+    @Transactional
+    public UserDTO updateUser(Long id, UserCreateDTO userCreateDTO) {
         if (!userRepository.existsById(id)) {
             throw new EntityNotFoundException("User not found with id: " + id);
         }
 
         // Check if username already exists (and it's not the current user)
-        Optional<User> existingUserByUsername = userRepository.findByUsername(userDTO.getUsername());
+        Optional<User> existingUserByUsername = userRepository.findByUsername(userCreateDTO.getUsername());
         if (existingUserByUsername.isPresent() && !existingUserByUsername.get().getId().equals(id)) {
-            throw new IllegalArgumentException("Username already exists: " + userDTO.getUsername());
+            throw new IllegalArgumentException("Username already exists: " + userCreateDTO.getUsername());
         }
 
+        // Get existing user to access its person
+        User existingUser = userRepository.findById(id).orElseThrow();
+        
         // Update the person if it exists
-        if (userDTO.getPerson() != null) {
-            User existingUser = userRepository.findById(id).orElseThrow();
+        if (userCreateDTO.getPerson() != null) {
             if (existingUser.getPerson() != null) {
-                personService.updatePerson(existingUser.getPerson().getId(), userDTO.getPerson());
+                // Update existing person
+                PersonDTO updatedPersonDTO = personService.updatePerson(
+                        existingUser.getPerson().getId(), 
+                        userCreateDTO.getPerson()
+                );
+                userCreateDTO.setPerson(updatedPersonDTO); // Use the fully populated PersonDTO
             } else {
-                PersonDTO personDTO = personService.createPerson(userDTO.getPerson());
-                userDTO.getPerson().setId(personDTO.getId());
+                // Create new person
+                PersonDTO savedPersonDTO = personService.createPerson(userCreateDTO.getPerson());
+                userCreateDTO.setPerson(savedPersonDTO); // Use the fully populated PersonDTO
             }
         }
 
-        User user = userMapper.toEntity(userDTO);
-        user.setId(id);
+        // Ensure ID is set correctly
+        userCreateDTO.setId(id);
+        
+        User user = userMapper.toEntity(userCreateDTO);
         User updatedUser = userRepository.save(user);
         return userMapper.toDto(updatedUser);
     }
