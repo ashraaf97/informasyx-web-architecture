@@ -1,33 +1,27 @@
-package com.example.demo.domain;
+package com.example.demo.domain.dto;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Person {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class PersonDTO {
     private Long id;
-
-    @NotBlank
+    
+    @NotBlank(message = "First name is required")
     private String firstName;
-
-    @NotBlank
+    
+    @NotBlank(message = "Last name is required")
     private String lastName;
-
+    
+    @Email(message = "Email should be valid")
     private String email;
-
+    
     private String phoneNumber;
-
+    
     private String address;
-}
+} 
