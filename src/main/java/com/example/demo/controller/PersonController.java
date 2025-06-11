@@ -47,8 +47,10 @@ public class PersonController {
         try {
             PersonDTO updatedPerson = personService.updatePerson(id, personDTO);
             return ResponseEntity.ok(updatedPerson);
-        } catch (Exception e) {
+        } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
