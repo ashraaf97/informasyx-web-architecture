@@ -9,16 +9,64 @@ This Spring Boot application provides a RESTful API for managing persons and use
 - Database migrations with Liquibase
 - Support for PostgreSQL and H2 databases
 - API documentation with OpenAPI/Swagger
+- Docker and Docker Compose support
 
 ## Requirements
 
 - Java 17 or higher
 - Maven 3.8 or higher
 - PostgreSQL (optional, can use embedded H2 instead)
+- Docker and Docker Compose (optional, for containerized deployment)
+
+## Running the Application
+
+### Using Docker (Recommended)
+
+#### With Docker Compose
+
+1. Build and start all services:
+   ```bash
+   docker-compose up
+   ```
+
+2. Access the application at http://localhost:8080
+
+3. To stop all services:
+   ```bash
+   docker-compose down
+   ```
+
+#### Using Docker Directly
+
+1. Build the Docker image:
+   ```bash
+   ./mvnw spring-boot:build-image -Dspring-boot.build-image.imageName=demo:latest
+   ```
+
+2. Run the container:
+   ```bash
+   docker run -p 8080:8080 demo:latest
+   ```
+
+### Without Docker
+
+1. Clone the repository
+2. Navigate to the project directory
+3. Run the application:
+
+```bash
+mvn spring-boot:run
+```
+
+To run with a specific profile:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=h2
+```
 
 ## Database Configuration
 
-The application supports two database configurations:
+The application supports multiple database configurations:
 
 ### PostgreSQL
 
@@ -42,23 +90,13 @@ For development and testing, you can use the H2 in-memory database. To use H2 in
 spring.profiles.active=h2
 ```
 
-With H2, you don't need to set up a database server as it will create an in-memory database.
+### Docker Profile
 
-## Running the Application
+When running with Docker, the application uses the `docker` profile which is configured to connect to the PostgreSQL container:
 
-1. Clone the repository
-2. Navigate to the project directory
-3. Run the application:
-
-```bash
-mvn spring-boot:run
-```
-
-To run with a specific profile:
-
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=h2
-```
+- URL: `jdbc:postgresql://db:5432/postgres`
+- Username: `postgres`
+- Password: `postgres`
 
 ## API Documentation
 
@@ -93,4 +131,6 @@ src/main/resources/db/changelog/
 - PostgreSQL / H2
 - MapStruct
 - OpenAPI/Swagger
-- Lombok 
+- Lombok
+- Docker
+- Docker Compose 

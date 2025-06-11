@@ -1,0 +1,15 @@
+target/
+!target/*.jar
+.git/
+.gitignore
+.idea/
+*.iml
+*.iws
+*.ipr
+.mvn/
+.settings/
+.classpath
+.project
+.vscode/
+node_modules/
+npm-debug.log 

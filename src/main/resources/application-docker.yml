@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://db:5432/postgres
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+
+server:
+  port: 8080
+
+logging:
+  level:
+    org.springframework: INFO
+    com.example.demo: INFO 
