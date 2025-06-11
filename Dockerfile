@@ -24,6 +24,10 @@ RUN java -Djarmode=layertools -jar target/*.jar extract --destination target/ext
 
 # Create the final image
 FROM eclipse-temurin:17-jre
+
+# Create a non-root user
+RUN useradd -m -s /bin/bash appuser
+USER appuser
 VOLUME /tmp
 ARG EXTRACTED=/workspace/app/target/extracted
 
