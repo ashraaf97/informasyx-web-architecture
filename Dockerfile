@@ -1,22 +1,20 @@
 FROM eclipse-temurin:17-jdk AS build
 WORKDIR /workspace/app
 
-# Copy maven executable and pom.xml
-COPY mvnw .
-COPY .mvn .mvn
+# Install Maven
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
+
+# Copy pom.xml
 COPY pom.xml .
 
-# Make mvnw executable
-RUN chmod +x ./mvnw
-
 # Download all dependencies
-RUN ./mvnw dependency:go-offline -B
+RUN mvn dependency:go-offline -B
 
 # Copy the project source
 COPY src src
 
 # Build the project
-RUN ./mvnw package -DskipTests
+RUN mvn package -DskipTests
 
 # Extract the JAR layers for better caching
 RUN mkdir -p target/extracted
