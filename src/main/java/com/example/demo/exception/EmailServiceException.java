@@ -1,10 +1,13 @@
 package com.example.demo.exception;
 
+import lombok.Getter;
+
 /**
  * Exception thrown when there are general email service errors.
  * This is a runtime version of EmailException for cases where checked exceptions
  * cannot be used (like in Spring's declarative transaction management).
  */
+@Getter
 public class EmailServiceException extends RuntimeException {
 
     private final String emailAddress;
@@ -43,11 +46,4 @@ public class EmailServiceException extends RuntimeException {
         this.operation = emailException.getOperation();
     }
 
-    public String getEmailAddress() {
-        return emailAddress;
-    }
-
-    public EmailException.EmailOperation getOperation() {
-        return operation;
-    }
 }

@@ -1,9 +1,12 @@
 package com.example.demo.exception;
 
+import lombok.Getter;
+
 /**
  * Exception thrown when there are issues with email template processing.
  * Examples: Template not found, template parsing errors, missing template variables.
  */
+@Getter
 public class EmailTemplateException extends EmailException {
 
     private final String templateName;
@@ -30,7 +33,4 @@ public class EmailTemplateException extends EmailException {
         this.templateName = templateName;
     }
 
-    public String getTemplateName() {
-        return templateName;
-    }
 }

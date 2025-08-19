@@ -123,22 +123,14 @@ public class GlobalExceptionHandler {
      * Generate user-friendly error messages for delivery exceptions
      */
     private String getDeliveryErrorMessage(EmailDeliveryException ex) {
-        switch (ex.getReason()) {
-            case INVALID_EMAIL_ADDRESS:
-                return "Invalid email address. Please check your email and try again.";
-            case RATE_LIMIT_EXCEEDED:
-                return "Too many email requests. Please wait a few minutes and try again.";
-            case AUTHENTICATION_FAILED:
-            case SMTP_CONNECTION_FAILED:
-            case AWS_SES_ERROR:
-            case SERVICE_UNAVAILABLE:
-                return "Email service is temporarily unavailable. Please try again later.";
-            case TEMPLATE_PROCESSING_FAILED:
-                return "Email processing error. Please try again later.";
-            case UNKNOWN:
-            default:
-                return "Failed to send email. Please check your email address and try again.";
-        }
+        return switch (ex.getReason()) {
+            case INVALID_EMAIL_ADDRESS -> "Invalid email address. Please check your email and try again.";
+            case RATE_LIMIT_EXCEEDED -> "Too many email requests. Please wait a few minutes and try again.";
+            case AUTHENTICATION_FAILED, SMTP_CONNECTION_FAILED, AWS_SES_ERROR, SERVICE_UNAVAILABLE ->
+                    "Email service is temporarily unavailable. Please try again later.";
+            case TEMPLATE_PROCESSING_FAILED -> "Email processing error. Please try again later.";
+            default -> "Failed to send email. Please check your email address and try again.";
+        };
     }
 
     @ExceptionHandler(Exception.class)

@@ -6,6 +6,7 @@ import lombok.Getter;
  * Exception thrown when email delivery fails.
  * Examples: SMTP connection failures, SES sending errors, invalid email addresses.
  */
+@Getter
 public class EmailDeliveryException extends EmailException {
 
     private final DeliveryFailureReason reason;
@@ -30,10 +31,6 @@ public class EmailDeliveryException extends EmailException {
                                  DeliveryFailureReason reason, Throwable cause) {
         super(message, emailAddress, operation, cause);
         this.reason = reason;
-    }
-
-    public DeliveryFailureReason getReason() {
-        return reason;
     }
 
     /**

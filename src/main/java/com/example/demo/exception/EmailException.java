@@ -1,9 +1,12 @@
 package com.example.demo.exception;
 
+import lombok.Getter;
+
 /**
  * Base exception for all email-related operations.
  * This is the parent class for all email exceptions in the system.
  */
+@Getter
 public class EmailException extends Exception {
 
     private final String emailAddress;
@@ -31,14 +34,6 @@ public class EmailException extends Exception {
         super(message, cause);
         this.emailAddress = emailAddress;
         this.operation = operation;
-    }
-
-    public String getEmailAddress() {
-        return emailAddress;
-    }
-
-    public EmailOperation getOperation() {
-        return operation;
     }
 
     /**

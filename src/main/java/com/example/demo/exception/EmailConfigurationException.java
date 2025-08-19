@@ -1,9 +1,12 @@
 package com.example.demo.exception;
 
+import lombok.Getter;
+
 /**
  * Exception thrown when there are configuration issues with email services.
  * Examples: Missing credentials, invalid SMTP settings, AWS SES configuration errors.
  */
+@Getter
 public class EmailConfigurationException extends EmailException {
 
     private final String configurationKey;
@@ -28,7 +31,4 @@ public class EmailConfigurationException extends EmailException {
         this.configurationKey = configurationKey;
     }
 
-    public String getConfigurationKey() {
-        return configurationKey;
-    }
 }
