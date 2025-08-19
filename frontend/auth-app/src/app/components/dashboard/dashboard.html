@@ -1,9 +1,14 @@
 <div class="dashboard-container">
   <div class="dashboard-header">
     <h1>Welcome, {{currentUser}}!</h1>
-    <button (click)="onLogout()" class="btn-logout" [disabled]="isLoggingOut">
-      {{isLoggingOut ? 'Logging out...' : 'Logout'}}
-    </button>
+    <div class="button-group">
+      <button (click)="onChangePassword()" class="btn-change-password">
+        Change Password
+      </button>
+      <button (click)="onLogout()" class="btn-logout" [disabled]="isLoggingOut">
+        {{isLoggingOut ? 'Logging out...' : 'Logout'}}
+      </button>
+    </div>
   </div>
   
   <div class="dashboard-content">

@@ -16,6 +16,23 @@ export interface AuthResponse {
   success: boolean;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface SignUpRequest {
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phoneNumber?: string;
+  address?: string;
+  password: string;
+  confirmPassword: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -64,6 +81,20 @@ export class AuthService {
 
   getCurrentUser(): string | null {
     return localStorage.getItem('currentUser');
+  }
+
+  changePassword(changePasswordRequest: ChangePasswordRequest): Observable<AuthResponse> {
+    const token = localStorage.getItem('authToken');
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    return this.http.put<AuthResponse>(`${this.apiUrl}/change-password`, changePasswordRequest, { headers });
+  }
+
+  signUp(signUpRequest: SignUpRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, signUpRequest);
   }
 
   private clearLocalStorage(): void {

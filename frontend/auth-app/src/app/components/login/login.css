@@ -74,3 +74,25 @@
   text-align: center;
   font-size: 0.9rem;
 }
+
+.signup-link {
+  text-align: center;
+  padding-top: 1.5rem;
+  margin-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.signup-link p {
+  margin: 0;
+  color: #666;
+}
+
+.signup-link a {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.signup-link a:hover {
+  text-decoration: underline;
+}

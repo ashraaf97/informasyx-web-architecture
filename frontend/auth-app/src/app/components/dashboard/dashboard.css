@@ -18,6 +18,25 @@
   font-size: 1.5rem;
 }
 
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-change-password {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.btn-change-password:hover {
+  background-color: #218838;
+}
+
 .btn-logout {
   background-color: #dc3545;
   color: white;

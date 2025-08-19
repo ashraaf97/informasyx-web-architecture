@@ -48,4 +48,8 @@ export class Login {
       }
     });
   }
+
+  onSignUp(): void {
+    this.router.navigate(['/signup']);
+  }
 }

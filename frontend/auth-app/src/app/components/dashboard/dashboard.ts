@@ -45,4 +45,8 @@ export class Dashboard implements OnInit {
       }
     });
   }
+
+  onChangePassword(): void {
+    this.router.navigate(['/change-password']);
+  }
 }
