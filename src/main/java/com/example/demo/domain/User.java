@@ -30,5 +30,8 @@ public class User {
 
     private boolean active = true;
 
+    @Column(name = "email_verified")
+    private boolean emailVerified = false;
+
     private String roles; // Comma-separated roles
 }

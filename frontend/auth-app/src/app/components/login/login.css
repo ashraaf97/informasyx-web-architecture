@@ -75,24 +75,24 @@
   font-size: 0.9rem;
 }
 
-.signup-link {
+.auth-links {
   text-align: center;
   padding-top: 1.5rem;
   margin-top: 1.5rem;
   border-top: 1px solid #eee;
 }
 
-.signup-link p {
-  margin: 0;
+.auth-links p {
+  margin: 0.5rem 0;
   color: #666;
 }
 
-.signup-link a {
+.auth-links a {
   color: #007bff;
   text-decoration: none;
   font-weight: 500;
 }
 
-.signup-link a:hover {
+.auth-links a:hover {
   text-decoration: underline;
 }

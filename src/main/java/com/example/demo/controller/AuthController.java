@@ -2,7 +2,9 @@ package com.example.demo.controller;
 
 import com.example.demo.domain.dto.AuthResponse;
 import com.example.demo.domain.dto.ChangePasswordRequest;
+import com.example.demo.domain.dto.ForgotPasswordRequest;
 import com.example.demo.domain.dto.LoginRequest;
+import com.example.demo.domain.dto.ResetPasswordRequest;
 import com.example.demo.domain.dto.SignUpRequest;
 import com.example.demo.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -67,6 +69,36 @@ public class AuthController {
         }
         
         AuthResponse response = authService.changePassword(token, changePasswordRequest);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/verify-email")
+    @Operation(summary = "Verify email address", description = "Verifies user email address with token")
+    public ResponseEntity<AuthResponse> verifyEmail(@RequestParam String token) {
+        AuthResponse response = authService.verifyEmail(token);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Forgot password", description = "Sends password reset email to user")
+    public ResponseEntity<AuthResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest forgotPasswordRequest) {
+        AuthResponse response = authService.forgotPassword(forgotPasswordRequest);
+        // Always return success for security reasons
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset password", description = "Resets user password with token")
+    public ResponseEntity<AuthResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest resetPasswordRequest) {
+        AuthResponse response = authService.resetPassword(resetPasswordRequest);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {

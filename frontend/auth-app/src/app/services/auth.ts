@@ -33,6 +33,16 @@ export interface SignUpRequest {
   confirmPassword: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -95,6 +105,18 @@ export class AuthService {
 
   signUp(signUpRequest: SignUpRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/signup`, signUpRequest);
+  }
+
+  verifyEmail(token: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/verify-email?token=${token}`, {});
+  }
+
+  forgotPassword(forgotPasswordRequest: ForgotPasswordRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/forgot-password`, forgotPasswordRequest);
+  }
+
+  resetPassword(resetPasswordRequest: ResetPasswordRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/reset-password`, resetPasswordRequest);
   }
 
   private clearLocalStorage(): void {

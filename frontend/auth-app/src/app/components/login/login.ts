@@ -52,4 +52,8 @@ export class Login {
   onSignUp(): void {
     this.router.navigate(['/signup']);
   }
+
+  onForgotPassword(): void {
+    this.router.navigate(['/forgot-password']);
+  }
 }

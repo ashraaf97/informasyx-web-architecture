@@ -5,7 +5,10 @@ This full-stack application provides authentication and user management function
 ## Features
 
 - **Authentication System**: Login/logout with JWT-like token-based authentication
-- **Angular Frontend**: Modern web interface with login and dashboard pages
+- **User Registration & Email Verification**: Complete signup flow with email verification
+- **Password Management**: Change password and forgot password with email reset
+- **Multiple Email Providers**: Support for Mock, SMTP, and Amazon SES
+- **Angular Frontend**: Modern web interface with comprehensive auth components
 - **User Management**: CRUD operations for Person and User entities
 - **Security**: Spring Security with BCrypt password hashing
 - **Database Support**: PostgreSQL with Liquibase migrations
@@ -156,6 +159,55 @@ Authorization: Bearer TOKEN_admin_1234567890
   "message": "Logout successful", 
   "success": true
 }
+```
+
+## Email Configuration
+
+The application supports multiple email providers for sending verification and password reset emails:
+
+### Email Providers
+
+1. **Mock Service (Default)**
+   - Logs emails to console instead of sending them
+   - Perfect for development and testing
+   - No configuration required
+
+2. **Amazon SES**
+   - Production-ready email service
+   - Requires AWS account and SES setup
+   - See [SES-SETUP.md](SES-SETUP.md) for complete configuration guide
+
+3. **Traditional SMTP**
+   - Works with any SMTP server (Gmail, SendGrid, etc.)
+   - Requires SMTP server credentials
+
+### Quick Configuration
+
+#### Using Mock Service (Default)
+```bash
+# No configuration needed - emails logged to console
+mvn spring-boot:run
+```
+
+#### Using Amazon SES
+```bash
+# Set environment variables
+export AWS_SES_ACCESS_KEY=your_access_key
+export AWS_SES_SECRET_KEY=your_secret_key
+export AWS_SES_REGION=us-east-1
+export APP_FROM_EMAIL=noreply@yourdomain.com
+
+# Run with SES profile
+SPRING_PROFILES_ACTIVE=ses mvn spring-boot:run
+```
+
+#### Using SMTP (Gmail example)
+```properties
+app.email.provider=smtp
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your_email@gmail.com
+spring.mail.password=your_app_password
 ```
 
 ## API Documentation

@@ -1,9 +1,6 @@
 package com.example.demo.domain;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
@@ -33,6 +30,9 @@ public class Person {
     private String phoneNumber;
 
     private String address;
+
+    @OneToOne(mappedBy = "person", fetch = FetchType.LAZY)
+    private User user;
 
     @Override
     public final boolean equals(Object o) {

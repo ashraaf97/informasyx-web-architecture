@@ -4,11 +4,16 @@ import com.example.demo.domain.Person;
 import com.example.demo.domain.User;
 import com.example.demo.domain.dto.AuthResponse;
 import com.example.demo.domain.dto.ChangePasswordRequest;
+import com.example.demo.domain.dto.ForgotPasswordRequest;
 import com.example.demo.domain.dto.LoginRequest;
+import com.example.demo.domain.dto.ResetPasswordRequest;
 import com.example.demo.domain.dto.SignUpRequest;
 import com.example.demo.domain.repository.PersonRepository;
 import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.service.AuthService;
+import com.example.demo.domain.VerificationToken;
+import com.example.demo.service.EmailService;
+import com.example.demo.service.VerificationTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,6 +36,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
+    private final VerificationTokenService verificationTokenService;
+    private final EmailService emailService;
     
     private final Map<String, String> tokenStore = new ConcurrentHashMap<>();
 
@@ -51,6 +58,10 @@ public class AuthServiceImpl implements AuthService {
 
             if (!user.isActive()) {
                 return AuthResponse.failure("User account is deactivated");
+            }
+
+            if (!user.isEmailVerified()) {
+                return AuthResponse.failure("Please verify your email address before logging in");
             }
 
             String token = generateSimpleToken(user.getUsername());
@@ -163,16 +174,109 @@ public class AuthServiceImpl implements AuthService {
             user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
             user.setPerson(savedPerson);
             user.setActive(true);
+            user.setEmailVerified(false); // Will be verified via email
             user.setRoles("USER");
 
-            userRepository.save(user);
+            User savedUser = userRepository.save(user);
+
+            // Generate email verification token and send verification email
+            String verificationToken = verificationTokenService.generateEmailVerificationToken(savedUser);
+            emailService.sendEmailVerification(savedUser, verificationToken);
 
             log.info("New user registered: {}", signUpRequest.getUsername());
-            return new AuthResponse(null, signUpRequest.getUsername(), "User registered successfully", true);
+            return new AuthResponse(null, signUpRequest.getUsername(), 
+                "User registered successfully! Please check your email to verify your account.", true);
 
         } catch (Exception e) {
             log.error("Sign up error for username: {}", signUpRequest.getUsername(), e);
             return AuthResponse.failure("Registration failed");
+        }
+    }
+
+    @Override
+    public AuthResponse verifyEmail(String token) {
+        try {
+            boolean verified = verificationTokenService.verifyEmailToken(token);
+            if (verified) {
+                VerificationToken verificationToken = verificationTokenService.findByToken(token);
+                User user = verificationToken.getUser();
+                
+                // Send welcome email after successful verification
+                emailService.sendWelcomeEmail(user);
+                
+                return new AuthResponse(null, user.getUsername(), 
+                    "Email verified successfully! You can now log in.", true);
+            } else {
+                return AuthResponse.failure("Invalid or expired verification token");
+            }
+        } catch (Exception e) {
+            log.error("Email verification error", e);
+            return AuthResponse.failure("Email verification failed");
+        }
+    }
+
+    @Override
+    public AuthResponse forgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
+        try {
+            Person person = personRepository.findByEmail(forgotPasswordRequest.getEmail())
+                .orElse(null);
+                
+            if (person == null) {
+                // Don't reveal if email exists or not for security
+                return new AuthResponse(null, null, 
+                    "If an account with this email exists, you will receive password reset instructions.", true);
+            }
+
+            User user = userRepository.findByUsername(person.getUser().getUsername())
+                .orElse(null);
+                
+            if (user == null || !user.isActive()) {
+                return new AuthResponse(null, null, 
+                    "If an account with this email exists, you will receive password reset instructions.", true);
+            }
+
+            // Generate password reset token and send email
+            String resetToken = verificationTokenService.generatePasswordResetToken(user);
+            emailService.sendPasswordResetEmail(user, resetToken);
+
+            log.info("Password reset requested for user: {}", user.getUsername());
+            return new AuthResponse(null, null, 
+                "If an account with this email exists, you will receive password reset instructions.", true);
+
+        } catch (Exception e) {
+            log.error("Forgot password error", e);
+            return AuthResponse.failure("Password reset request failed");
+        }
+    }
+
+    @Override
+    public AuthResponse resetPassword(ResetPasswordRequest resetPasswordRequest) {
+        try {
+            if (!resetPasswordRequest.getNewPassword().equals(resetPasswordRequest.getConfirmPassword())) {
+                return AuthResponse.failure("New password and confirm password do not match");
+            }
+
+            boolean tokenValid = verificationTokenService.verifyPasswordResetToken(resetPasswordRequest.getToken());
+            if (!tokenValid) {
+                return AuthResponse.failure("Invalid or expired reset token");
+            }
+
+            VerificationToken verificationToken = verificationTokenService.findByToken(resetPasswordRequest.getToken());
+            User user = verificationToken.getUser();
+
+            // Update password
+            user.setPassword(passwordEncoder.encode(resetPasswordRequest.getNewPassword()));
+            userRepository.save(user);
+
+            // Mark token as used
+            verificationTokenService.markTokenAsUsed(verificationToken);
+
+            log.info("Password reset successfully for user: {}", user.getUsername());
+            return new AuthResponse(null, user.getUsername(), "Password reset successful! You can now log in with your new password.", true);
+
+        } catch (Exception e) {
+            log.error("Password reset error", e);
+            return AuthResponse.failure("Password reset failed");
         }
     }
 }
