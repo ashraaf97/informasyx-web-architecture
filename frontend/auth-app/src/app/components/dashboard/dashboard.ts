@@ -11,8 +11,10 @@ import { AuthService } from '../../services/auth';
 })
 export class Dashboard implements OnInit {
   currentUser: string | null = '';
+  currentRole: string | null = '';
   logoutMessage = '';
   isLoggingOut = false;
+  isAdmin = false;
 
   constructor(
     private authService: AuthService,
@@ -21,6 +23,9 @@ export class Dashboard implements OnInit {
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
+    this.currentRole = this.authService.getCurrentUserRole();
+    this.isAdmin = this.authService.isAdmin();
+    
     if (!this.authService.isLoggedIn()) {
       this.router.navigate(['/login']);
     }
@@ -48,5 +53,9 @@ export class Dashboard implements OnInit {
 
   onChangePassword(): void {
     this.router.navigate(['/change-password']);
+  }
+
+  onAdminPanel(): void {
+    this.router.navigate(['/admin']);
   }
 }

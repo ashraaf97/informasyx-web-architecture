@@ -1,0 +1,114 @@
+<div class="role-management-container">
+  <div class="role-management-card">
+    <div class="card-header">
+      <h2>Role Management</h2>
+      <button type="button" class="back-btn" (click)="goBack()">
+        ← Back to Admin Panel
+      </button>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="role-management-form">
+      <!-- Info Section -->
+      <div class="info-section">
+        <div class="warning-badge">
+          <span class="badge">SUPER ADMIN ONLY</span>
+          <p>Only Super Admin users can change user roles. This action cannot be undone.</p>
+        </div>
+      </div>
+
+      <!-- Role Change Section -->
+      <div class="form-section">
+        <h3>Change User Role</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="username">Username *</label>
+            <input
+              type="text"
+              id="username"
+              [(ngModel)]="changeRoleRequest.username"
+              name="username"
+              required
+              placeholder="Enter username to change role"
+              class="form-control"
+              [disabled]="isLoading"
+            />
+            <small class="help-text">Enter the exact username of the user whose role you want to change</small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="role">New Role *</label>
+            <select
+              id="role"
+              [(ngModel)]="changeRoleRequest.role"
+              name="role"
+              required
+              class="form-control"
+              [disabled]="isLoading"
+            >
+              <option *ngFor="let role of availableRoles" [value]="role.value">
+                {{ role.label }}
+              </option>
+            </select>
+            <small class="help-text">Select the new role for this user</small>
+          </div>
+        </div>
+
+        <!-- Role Description -->
+        <div class="role-description" *ngIf="changeRoleRequest.role">
+          <h4>{{ availableRoles.find(r => r.value === changeRoleRequest.role)?.label }} Role</h4>
+          <p>{{ getSelectedRoleDescription() }}</p>
+        </div>
+      </div>
+
+      <!-- Role Information Section -->
+      <div class="form-section">
+        <h3>Role Information</h3>
+        
+        <div class="role-info-grid">
+          <div class="role-info-card" *ngFor="let role of availableRoles">
+            <div class="role-header">
+              <span class="role-name">{{ role.label }}</span>
+              <span class="role-badge" [ngClass]="'badge-' + role.value.toLowerCase()">
+                {{ role.value }}
+              </span>
+            </div>
+            <p class="role-desc">{{ role.description }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Important Notes -->
+      <div class="notes-section">
+        <h4>Important Notes:</h4>
+        <ul>
+          <li>Super Admin roles cannot be changed or created through this interface</li>
+          <li>Only one Super Admin exists in the system for security purposes</li>
+          <li>Admin users can create regular users but cannot change roles</li>
+          <li>This action will take effect immediately</li>
+          <li>The user will need to log out and log back in to see role changes</li>
+        </ul>
+      </div>
+
+      <!-- Message Display -->
+      <div *ngIf="message" class="message" [ngClass]="{'success': isSuccess, 'error': !isSuccess}">
+        {{ message }}
+      </div>
+
+      <!-- Submit Button -->
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner"></span>
+          <span *ngIf="isLoading">Changing Role...</span>
+          <span *ngIf="!isLoading">Change User Role</span>
+        </button>
+        
+        <button type="button" class="btn btn-secondary" (click)="goBack()" [disabled]="isLoading">
+          Cancel
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

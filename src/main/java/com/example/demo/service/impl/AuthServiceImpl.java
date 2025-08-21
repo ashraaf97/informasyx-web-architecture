@@ -1,6 +1,7 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.domain.Person;
+import com.example.demo.domain.Role;
 import com.example.demo.domain.User;
 import com.example.demo.domain.dto.AuthResponse;
 import com.example.demo.domain.dto.ChangePasswordRequest;
@@ -67,8 +68,8 @@ public class AuthServiceImpl implements AuthService {
             String token = generateSimpleToken(user.getUsername());
             tokenStore.put(token, user.getUsername());
             
-            log.info("User {} logged in successfully", user.getUsername());
-            return AuthResponse.success(user.getUsername(), token);
+            log.info("User {} with role {} logged in successfully", user.getUsername(), user.getRole());
+            return AuthResponse.success(user.getUsername(), token, user.getRole());
 
         } catch (BadCredentialsException e) {
             log.warn("Failed login attempt for username: {}", loginRequest.getUsername());
@@ -175,7 +176,7 @@ public class AuthServiceImpl implements AuthService {
             user.setPerson(savedPerson);
             user.setActive(true);
             user.setEmailVerified(false); // Will be verified via email
-            user.setRoles("USER");
+            user.setRole(Role.USER);
 
             User savedUser = userRepository.save(user);
 

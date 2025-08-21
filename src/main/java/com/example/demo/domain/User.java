@@ -33,5 +33,7 @@ public class User {
     @Column(name = "email_verified")
     private boolean emailVerified = false;
 
-    private String roles; // Comma-separated roles
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Role role = Role.USER;
 }

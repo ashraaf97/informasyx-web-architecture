@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, finalize } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface LoginRequest {
@@ -10,10 +10,11 @@ export interface LoginRequest {
 }
 
 export interface AuthResponse {
-  token: string;
-  username: string;
+  token: string | null;
+  username: string | null;
   message: string;
   success: boolean;
+  role?: string;
 }
 
 export interface ChangePasswordRequest {
@@ -52,6 +53,11 @@ export class AuthService {
     localStorage.getItem('currentUser')
   );
   public currentUser$ = this.currentUserSubject.asObservable();
+  
+  private currentUserRoleSubject = new BehaviorSubject<string | null>(
+    localStorage.getItem('currentUserRole')
+  );
+  public currentUserRole$ = this.currentUserRoleSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
@@ -61,8 +67,14 @@ export class AuthService {
         map(response => {
           if (response.success && response.token) {
             localStorage.setItem('authToken', response.token);
-            localStorage.setItem('currentUser', response.username);
+            if (response.username) {
+              localStorage.setItem('currentUser', response.username);
+            }
             this.currentUserSubject.next(response.username);
+            if (response.role) {
+              localStorage.setItem('currentUserRole', response.role);
+              this.currentUserRoleSubject.next(response.role);
+            }
           }
           return response;
         })
@@ -78,10 +90,8 @@ export class AuthService {
     
     return this.http.post<AuthResponse>(`${this.apiUrl}/logout`, {}, { headers })
       .pipe(
-        map(response => {
-          this.clearLocalStorage();
-          return response;
-        })
+        map(response => response),
+        finalize(() => this.clearLocalStorage())
       );
   }
 
@@ -91,6 +101,20 @@ export class AuthService {
 
   getCurrentUser(): string | null {
     return localStorage.getItem('currentUser');
+  }
+
+  getCurrentUserRole(): string | null {
+    return localStorage.getItem('currentUserRole');
+  }
+
+  isAdmin(): boolean {
+    const role = this.getCurrentUserRole();
+    return role === 'ADMIN' || role === 'SUPER_ADMIN';
+  }
+
+  isSuperAdmin(): boolean {
+    const role = this.getCurrentUserRole();
+    return role === 'SUPER_ADMIN';
   }
 
   changePassword(changePasswordRequest: ChangePasswordRequest): Observable<AuthResponse> {
@@ -122,6 +146,8 @@ export class AuthService {
   private clearLocalStorage(): void {
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('currentUserRole');
     this.currentUserSubject.next(null);
+    this.currentUserRoleSubject.next(null);
   }
 }
