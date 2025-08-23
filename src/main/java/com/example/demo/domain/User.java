@@ -28,7 +28,13 @@ public class User {
     @JoinColumn(name = "person_id", referencedColumnName = "id")
     private Person person;
 
+    @Column(nullable = false)
     private boolean active = true;
 
-    private String roles; // Comma-separated roles
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Role role = Role.USER;
 }

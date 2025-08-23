@@ -1,0 +1,136 @@
+<div class="admin-dashboard-container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-content">
+      <h1>Admin Management Panel</h1>
+      <div class="user-info">
+        <div class="user-details">
+          <span class="username">{{ currentUser }}</span>
+          <span class="role-badge" [ngClass]="'badge-' + (currentRole?.toLowerCase() || 'user')">
+            {{ currentRole }}
+          </span>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-outline" (click)="navigateToDashboard()">
+            Dashboard
+          </button>
+          <button class="btn btn-danger" (click)="logout()">
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+      <h2>Welcome to Admin Panel</h2>
+      <p *ngIf="isSuperAdmin">
+        As a Super Admin, you have full access to all administrative functions including user creation, admin creation, and role management.
+      </p>
+      <p *ngIf="isAdmin && !isSuperAdmin">
+        As an Admin, you can create new users and manage basic administrative tasks.
+      </p>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="action-cards">
+      <!-- Create User Card -->
+      <div class="card action-card" (click)="navigateToCreateUser()">
+        <div class="card-icon user-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <line x1="20" y1="8" x2="20" y2="14"></line>
+            <line x1="23" y1="11" x2="17" y2="11"></line>
+          </svg>
+        </div>
+        <div class="card-content">
+          <h3>Create User</h3>
+          <p>Create new regular users with basic access privileges</p>
+          <span class="permission-badge">Admin & Super Admin</span>
+        </div>
+        <div class="card-arrow">→</div>
+      </div>
+
+      <!-- Create Admin Card -->
+      <div 
+        class="card action-card" 
+        [ngClass]="{'disabled': !isSuperAdmin}"
+        (click)="isSuperAdmin && navigateToCreateAdmin()"
+      >
+        <div class="card-icon admin-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="8.5" cy="7" r="4"></circle>
+            <polyline points="17,11 19,13 23,9"></polyline>
+          </svg>
+        </div>
+        <div class="card-content">
+          <h3>Create Admin</h3>
+          <p>Create new admin users with administrative privileges</p>
+          <span class="permission-badge super-admin">Super Admin Only</span>
+        </div>
+        <div class="card-arrow" *ngIf="isSuperAdmin">→</div>
+        <div class="card-lock" *ngIf="!isSuperAdmin">🔒</div>
+      </div>
+
+      <!-- Role Management Card -->
+      <div 
+        class="card action-card" 
+        [ngClass]="{'disabled': !isSuperAdmin}"
+        (click)="isSuperAdmin && navigateToRoleManagement()"
+      >
+        <div class="card-icon role-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M12 1v6m0 6v6m11-7h-6m-6 0H1m20.6-3.6l-4.2 4.2m-8.4 0L4.4 7.6m15.2 8.8l-4.2-4.2m-8.4 0l-4.2 4.2"></path>
+          </svg>
+        </div>
+        <div class="card-content">
+          <h3>Role Management</h3>
+          <p>Change user roles and manage permissions</p>
+          <span class="permission-badge super-admin">Super Admin Only</span>
+        </div>
+        <div class="card-arrow" *ngIf="isSuperAdmin">→</div>
+        <div class="card-lock" *ngIf="!isSuperAdmin">🔒</div>
+      </div>
+    </div>
+
+    <!-- Permission Information -->
+    <div class="info-section">
+      <h3>Role Permissions</h3>
+      <div class="permission-grid">
+        <div class="permission-card">
+          <h4>Super Admin</h4>
+          <ul>
+            <li>Create regular users</li>
+            <li>Create admin users</li>
+            <li>Change user roles</li>
+            <li>All administrative functions</li>
+          </ul>
+        </div>
+        <div class="permission-card">
+          <h4>Admin</h4>
+          <ul>
+            <li>Create regular users</li>
+            <li>Basic administrative functions</li>
+            <li>Cannot create admin users</li>
+            <li>Cannot change user roles</li>
+          </ul>
+        </div>
+        <div class="permission-card">
+          <h4>User</h4>
+          <ul>
+            <li>Access personal dashboard</li>
+            <li>Change own password</li>
+            <li>View personal information</li>
+            <li>No administrative access</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

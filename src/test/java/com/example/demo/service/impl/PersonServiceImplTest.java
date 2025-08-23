@@ -40,10 +40,10 @@ class PersonServiceImplTest {
     @BeforeEach
     void setUp() {
         // Set up test data
-        testPerson = new Person(1L, "John", "Doe", "john.doe@example.com", "123-456-7890", "123 Main St");
+        testPerson = new Person(1L, "John", "Doe", "john.doe@example.com", "123-456-7890", "123 Main St", null);
         testPersonDTO = new PersonDTO(1L, "John", "Doe", "john.doe@example.com", "123-456-7890", "123 Main St");
         
-        Person person2 = new Person(2L, "Jane", "Smith", "jane.smith@example.com", "987-654-3210", "456 Oak Ave");
+        Person person2 = new Person(2L, "Jane", "Smith", "jane.smith@example.com", "987-654-3210", "456 Oak Ave", null);
         PersonDTO personDTO2 = new PersonDTO(2L, "Jane", "Smith", "jane.smith@example.com", "987-654-3210", "456 Oak Ave");
         
         personList = Arrays.asList(testPerson, person2);

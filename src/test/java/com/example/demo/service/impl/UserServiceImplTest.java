@@ -1,11 +1,13 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.domain.Person;
+import com.example.demo.domain.Role;
 import com.example.demo.domain.User;
 import com.example.demo.domain.dto.PersonDTO;
 import com.example.demo.domain.dto.UserCreateDTO;
 import com.example.demo.domain.dto.UserDTO;
 import com.example.demo.domain.mapper.UserMapper;
+import com.example.demo.domain.repository.PersonRepository;
 import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.service.PersonService;
 import jakarta.persistence.EntityNotFoundException;
@@ -32,6 +34,9 @@ class UserServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
+    private PersonRepository personRepository;
+
+    @Mock
     private PersonService personService;
 
     @Mock
@@ -51,17 +56,17 @@ class UserServiceImplTest {
     @BeforeEach
     void setUp() {
         // Set up test data
-        testPerson = new Person(1L, "John", "Doe", "john.doe@example.com", "123-456-7890", "123 Main St");
+        testPerson = new Person(1L, "John", "Doe", "john.doe@example.com", "123-456-7890", "123 Main St", null);
         testPersonDTO = new PersonDTO(1L, "John", "Doe", "john.doe@example.com", "123-456-7890", "123 Main St");
         
-        testUser = new User(1L, "johndoe", "password123", testPerson, true, "USER");
+        testUser = new User(1L, "johndoe", "password123", testPerson, true, false, Role.USER);
         testUserDTO = new UserDTO(1L, "johndoe", testPersonDTO, true, "USER");
         testUserCreateDTO = new UserCreateDTO(1L, "johndoe", "password123", testPersonDTO, true, "USER");
         
-        Person person2 = new Person(2L, "Jane", "Smith", "jane.smith@example.com", "987-654-3210", "456 Oak Ave");
+        Person person2 = new Person(2L, "Jane", "Smith", "jane.smith@example.com", "987-654-3210", "456 Oak Ave", null);
         PersonDTO personDTO2 = new PersonDTO(2L, "Jane", "Smith", "jane.smith@example.com", "987-654-3210", "456 Oak Ave");
         
-        User user2 = new User(2L, "janesmith", "password456", person2, true, "USER,ADMIN");
+        User user2 = new User(2L, "janesmith", "password456", person2, true, false, Role.USER);
         UserDTO userDTO2 = new UserDTO(2L, "janesmith", personDTO2, true, "USER,ADMIN");
         
         userList = Arrays.asList(testUser, user2);
@@ -149,8 +154,9 @@ class UserServiceImplTest {
     void createUser_Success() {
         // Arrange
         when(userRepository.existsByUsername("johndoe")).thenReturn(false);
-        when(personService.createPerson(testPersonDTO)).thenReturn(testPersonDTO);
+        // PersonDTO has ID, so createPerson won't be called
         when(userMapper.toEntity(testUserCreateDTO)).thenReturn(testUser);
+        when(personRepository.findById(1L)).thenReturn(Optional.of(testPerson));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
@@ -161,7 +167,9 @@ class UserServiceImplTest {
         assertNotNull(result);
         assertEquals(testUserDTO.getUsername(), result.getUsername());
         verify(userRepository, times(1)).existsByUsername("johndoe");
-        verify(personService, times(1)).createPerson(testPersonDTO);
+        // PersonDTO has ID, so createPerson should NOT be called
+        verify(personService, never()).createPerson(any());
+        verify(personRepository, times(1)).findById(1L);
         verify(userMapper, times(1)).toEntity(testUserCreateDTO);
         verify(userRepository, times(1)).save(any(User.class));
         verify(userMapper, times(1)).toDto(testUser);
@@ -227,7 +235,7 @@ class UserServiceImplTest {
     @Test
     void updateUser_UsernameAlreadyExists() {
         // Arrange
-        User otherUser = new User(2L, "johndoe", "password", null, true, "USER");
+        User otherUser = new User(2L, "johndoe", "password", null, true, false, Role.USER);
         when(userRepository.existsById(1L)).thenReturn(true);
         when(userRepository.findByUsername("johndoe")).thenReturn(Optional.of(otherUser));
 

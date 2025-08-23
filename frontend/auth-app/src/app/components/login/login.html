@@ -1,0 +1,43 @@
+<div class="login-container">
+  <div class="login-card">
+    <h2>Login</h2>
+    <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+      <div class="form-group">
+        <label for="username">Username:</label>
+        <input
+          type="text"
+          id="username"
+          name="username"
+          [(ngModel)]="credentials.username"
+          required
+          class="form-control"
+        />
+      </div>
+      
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="credentials.password"
+          required
+          class="form-control"
+        />
+      </div>
+      
+      <button type="submit" [disabled]="!loginForm.valid || isLoading" class="btn-primary">
+        {{isLoading ? 'Logging in...' : 'Login'}}
+      </button>
+      
+      <div *ngIf="errorMessage" class="error-message">
+        {{errorMessage}}
+      </div>
+    </form>
+
+    <div class="auth-links">
+      <p><a href="#" (click)="onForgotPassword()">Forgot Password?</a></p>
+      <p>Don't have an account? <a href="#" (click)="onSignUp()">Sign up here</a></p>
+    </div>
+  </div>
+</div>

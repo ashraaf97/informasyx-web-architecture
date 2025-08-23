@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="03" author="developer">
+        <comment>Insert admin person and user</comment>
+        
+        <!-- Insert admin person -->
+        <insert tableName="person">
+            <column name="first_name" value="Admin"/>
+            <column name="last_name" value="User"/>
+            <column name="email" value="admin@example.com"/>
+            <column name="phone_number" value="+1234567890"/>
+            <column name="address" value="System Administrator"/>
+        </insert>
+
+        <!-- Insert admin user with BCrypt hashed password for 'admin' -->
+        <!-- Password hash for 'admin' using BCrypt with strength 10: $2a$10$8x3RhPpq78pBkY52p.jkfetLRJcOQ0HDV/v16MBJZdXCYQ1UXUnhO -->
+        <insert tableName="app_user">
+            <column name="username" value="admin"/>
+            <column name="password" value="$2a$10$8x3RhPpq78pBkY52p.jkfetLRJcOQ0HDV/v16MBJZdXCYQ1UXUnhO"/>
+            <column name="person_id" valueComputed="(SELECT id FROM person WHERE email = 'admin@example.com')"/>
+            <column name="active" valueBoolean="true"/>
+            <column name="roles" value="ADMIN,USER"/>
+        </insert>
+
+        <rollback>
+            <delete tableName="app_user">
+                <where>username = 'admin'</where>
+            </delete>
+            <delete tableName="person">
+                <where>email = 'admin@example.com'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

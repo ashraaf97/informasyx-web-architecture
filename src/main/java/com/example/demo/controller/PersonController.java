@@ -1,9 +1,13 @@
 package com.example.demo.controller;
 
+import com.example.demo.domain.Role;
 import com.example.demo.domain.dto.PersonDTO;
+import com.example.demo.security.RequiredRole;
 import com.example.demo.service.PersonService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,18 +20,21 @@ import java.util.List;
 @RequestMapping("/api/persons")
 @RequiredArgsConstructor
 @Tag(name = "Person Management", description = "APIs for managing persons")
+@SecurityRequirement(name = "Bearer Authentication")
 public class PersonController {
 
     private final PersonService personService;
 
     @GetMapping
     @Operation(summary = "Get all persons", description = "Retrieves a list of all persons")
+    @RequiredRole({Role.ADMIN, Role.SUPER_ADMIN})
     public ResponseEntity<List<PersonDTO>> getAllPersons() {
         return ResponseEntity.ok(personService.getAllPersons());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get person by ID", description = "Retrieves a person by their ID")
+    @RequiredRole({Role.USER, Role.ADMIN, Role.SUPER_ADMIN})
     public ResponseEntity<PersonDTO> getPersonById(@PathVariable Long id) {
         return personService.getPersonById(id)
                 .map(ResponseEntity::ok)
@@ -36,6 +43,7 @@ public class PersonController {
 
     @PostMapping
     @Operation(summary = "Create person", description = "Creates a new person")
+    @RequiredRole({Role.ADMIN, Role.SUPER_ADMIN})
     public ResponseEntity<PersonDTO> createPerson(@Valid @RequestBody PersonDTO personDTO) {
         PersonDTO createdPerson = personService.createPerson(personDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(createdPerson);
@@ -43,6 +51,7 @@ public class PersonController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Update person", description = "Updates an existing person by ID")
+    @RequiredRole({Role.USER, Role.ADMIN, Role.SUPER_ADMIN})
     public ResponseEntity<PersonDTO> updatePerson(@PathVariable Long id, @Valid @RequestBody PersonDTO personDTO) {
         try {
             PersonDTO updatedPerson = personService.updatePerson(id, personDTO);
@@ -56,6 +65,7 @@ public class PersonController {
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Delete person", description = "Deletes a person by ID")
+    @RequiredRole({Role.SUPER_ADMIN})
     public ResponseEntity<Void> deletePerson(@PathVariable Long id) {
         try {
             personService.deletePerson(id);
@@ -67,6 +77,7 @@ public class PersonController {
 
     @GetMapping("/search/lastName")
     @Operation(summary = "Find by last name", description = "Finds persons by last name")
+    @RequiredRole({Role.ADMIN, Role.SUPER_ADMIN})
     public ResponseEntity<List<PersonDTO>> findByLastName(@RequestParam String lastName) {
         List<PersonDTO> persons = personService.findByLastName(lastName);
         return ResponseEntity.ok(persons);
@@ -74,6 +85,7 @@ public class PersonController {
 
     @GetMapping("/search/name")
     @Operation(summary = "Find by full name", description = "Finds persons by first and last name")
+    @RequiredRole({Role.ADMIN, Role.SUPER_ADMIN})
     public ResponseEntity<List<PersonDTO>> findByFullName(
             @RequestParam String firstName,
             @RequestParam String lastName) {
@@ -83,6 +95,7 @@ public class PersonController {
 
     @GetMapping("/search/email")
     @Operation(summary = "Find by email", description = "Finds persons by email content")
+    @RequiredRole({Role.ADMIN, Role.SUPER_ADMIN})
     public ResponseEntity<List<PersonDTO>> findByEmailContaining(@RequestParam String email) {
         List<PersonDTO> persons = personService.findByEmailContaining(email);
         return ResponseEntity.ok(persons);

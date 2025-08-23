@@ -1,6 +1,15 @@
 version: '3.8'
 
 services:
+  frontend:
+    build: ./frontend/auth-app
+    ports:
+      - "4200:80"
+    depends_on:
+      - app
+    networks:
+      - app-network
+
   app:
     build: .
     ports:

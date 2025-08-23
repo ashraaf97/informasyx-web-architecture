@@ -1,0 +1,56 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div class="user-info">
+      <h1>Welcome, {{currentUser}}!</h1>
+      <div class="role-badge" [ngClass]="'badge-' + (currentRole?.toLowerCase() || 'user')">
+        {{ currentRole }}
+      </div>
+    </div>
+    <div class="button-group">
+      <button *ngIf="isAdmin" (click)="onAdminPanel()" class="btn-admin">
+        Admin Panel
+      </button>
+      <button (click)="onChangePassword()" class="btn-change-password">
+        Change Password
+      </button>
+      <button (click)="onLogout()" class="btn-logout" [disabled]="isLoggingOut">
+        {{isLoggingOut ? 'Logging out...' : 'Logout'}}
+      </button>
+    </div>
+  </div>
+  
+  <div class="dashboard-content">
+    <div class="card">
+      <h3>Dashboard</h3>
+      <p>You have successfully logged in to the application.</p>
+      <p *ngIf="!isAdmin">You are logged in as a regular user.</p>
+      <p *ngIf="isAdmin && currentRole === 'ADMIN'">You are logged in as an Administrator with user management capabilities.</p>
+      <p *ngIf="isAdmin && currentRole === 'SUPER_ADMIN'">You are logged in as a Super Administrator with full system access.</p>
+    </div>
+
+    <div *ngIf="isAdmin" class="admin-features-card">
+      <h3>Administrative Features</h3>
+      <div class="feature-list">
+        <div class="feature-item">
+          <span class="feature-icon">👤</span>
+          <span>Create new users</span>
+        </div>
+        <div *ngIf="currentRole === 'SUPER_ADMIN'" class="feature-item">
+          <span class="feature-icon">👨‍💼</span>
+          <span>Create admin users</span>
+        </div>
+        <div *ngIf="currentRole === 'SUPER_ADMIN'" class="feature-item">
+          <span class="feature-icon">🔧</span>
+          <span>Manage user roles</span>
+        </div>
+      </div>
+      <button (click)="onAdminPanel()" class="btn-admin-large">
+        Access Admin Panel
+      </button>
+    </div>
+    
+    <div *ngIf="logoutMessage" class="message">
+      {{logoutMessage}}
+    </div>
+  </div>
+</div>
