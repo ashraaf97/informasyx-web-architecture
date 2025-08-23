@@ -130,7 +130,7 @@ class KafkaConfigTest {
         ProducerFactory<String, Object> producerFactory = kafkaConfig.producerFactory();
 
         // Assert
-        assertTrue(producerFactory instanceof DefaultKafkaProducerFactory);
+        assertInstanceOf(DefaultKafkaProducerFactory.class, producerFactory);
         DefaultKafkaProducerFactory<String, Object> defaultFactory = 
             (DefaultKafkaProducerFactory<String, Object>) producerFactory;
         

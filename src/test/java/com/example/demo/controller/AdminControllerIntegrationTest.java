@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureWebMvc
 @DirtiesContext
 @Transactional
-public class AdminControllerIntegrationTest {
+class AdminControllerIntegrationTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;

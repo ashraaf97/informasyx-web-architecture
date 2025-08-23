@@ -180,7 +180,7 @@ class UserRoleChangedEventTest {
         );
 
         // Assert
-        assertTrue(event instanceof BaseEvent);
+        assertInstanceOf(BaseEvent.class, event);
         assertEquals("user-management-service", event.getSource());
         assertEquals("1.0", event.getVersion());
         assertNotNull(event.getEventId());

@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestPropertySource(locations = "classpath:application-test.properties")
 @DirtiesContext
 @Transactional
-public class AuthServiceRoleTest {
+class AuthServiceRoleTest {
 
     @Autowired
     private AuthService authService;

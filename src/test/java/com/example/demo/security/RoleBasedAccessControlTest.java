@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(locations = "classpath:application-test.properties")
 @AutoConfigureWebMvc
 @Transactional
-public class RoleBasedAccessControlTest {
+class RoleBasedAccessControlTest {
 
     @Autowired
     private WebApplicationContext webApplicationContext;

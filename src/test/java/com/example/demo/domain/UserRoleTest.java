@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @TestPropertySource(locations = "classpath:application-test.properties")
-public class UserRoleTest {
+class UserRoleTest {
 
     @Autowired
     private TestEntityManager entityManager;
