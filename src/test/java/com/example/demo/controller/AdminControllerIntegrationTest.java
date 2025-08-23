@@ -8,15 +8,18 @@ import com.example.demo.domain.dto.ChangeRoleRequest;
 import com.example.demo.domain.repository.PersonRepository;
 import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.service.impl.AuthServiceImpl;
+import com.example.demo.service.EventPublisherService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,9 +28,14 @@ import org.springframework.web.context.WebApplicationContext;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@ActiveProfiles("test")
+@SpringBootTest(properties = {
+    "spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration",
+    "spring.kafka.bootstrap-servers=",
+    "app.kafka.enabled=false"
+})
+@TestPropertySource(locations = "classpath:application-test.properties")
 @AutoConfigureWebMvc
+@DirtiesContext
 @Transactional
 public class AdminControllerIntegrationTest {
 
@@ -48,6 +56,9 @@ public class AdminControllerIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private EventPublisherService eventPublisherService;
 
     private MockMvc mockMvc;
     private String superAdminToken;
@@ -118,7 +129,22 @@ public class AdminControllerIntegrationTest {
     }
 
     private String generateToken(String username) {
-        return "TOKEN_" + username + "_" + System.currentTimeMillis();
+        // Generate a token in the same format as AuthServiceImpl
+        String token = "TOKEN_" + username + "_" + System.currentTimeMillis();
+        
+        // Add the token to the auth service's tokenStore using reflection
+        try {
+            java.lang.reflect.Field tokenStoreField = authService.getClass().getDeclaredField("tokenStore");
+            tokenStoreField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, String> tokenStore = (java.util.Map<String, String>) tokenStoreField.get(authService);
+            tokenStore.put(token, username);
+        } catch (Exception e) {
+            // If reflection fails, log it but continue
+            System.err.println("Failed to add token to tokenStore: " + e.getMessage());
+        }
+        
+        return token;
     }
 
     @Test

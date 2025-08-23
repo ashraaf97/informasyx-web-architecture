@@ -8,13 +8,18 @@ import com.example.demo.domain.dto.AuthResponse;
 import com.example.demo.domain.dto.ChangeRoleRequest;
 import com.example.demo.domain.repository.PersonRepository;
 import com.example.demo.domain.repository.UserRepository;
+import com.example.demo.event.AdminCreatedEvent;
+import com.example.demo.event.UserCreatedEvent;
+import com.example.demo.event.UserRoleChangedEvent;
 import com.example.demo.security.SecurityUtils;
 import com.example.demo.service.AdminService;
+import com.example.demo.service.EventPublisherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -26,6 +31,7 @@ public class AdminServiceImpl implements AdminService {
     private final PersonRepository personRepository;
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtils securityUtils;
+    private final EventPublisherService eventPublisherService;
 
     @Override
     public AuthResponse createUser(AdminCreateUserRequest request) {
@@ -80,6 +86,36 @@ public class AdminServiceImpl implements AdminService {
             log.info("User {} created with role {} by admin {}", 
                 request.getUsername(), request.getRole(), currentUser.getUsername());
             
+            // Publish event based on role type
+            if (request.getRole() == Role.ADMIN) {
+                // Publish admin created event
+                AdminCreatedEvent adminEvent = new AdminCreatedEvent(
+                    savedUser.getId(),
+                    savedUser.getUsername(),
+                    savedPerson.getEmail(),
+                    savedPerson.getFirstName(),
+                    savedPerson.getLastName(),
+                    savedUser.getRole(),
+                    currentUser.getUsername(),
+                    currentUser.getRole().getName(),
+                    LocalDateTime.now()
+                );
+                eventPublisherService.publishAdminCreatedEvent(adminEvent);
+            } else {
+                // Publish user created event
+                UserCreatedEvent userEvent = new UserCreatedEvent(
+                    savedUser.getId(),
+                    savedUser.getUsername(),
+                    savedPerson.getEmail(),
+                    savedPerson.getFirstName(),
+                    savedPerson.getLastName(),
+                    savedUser.getRole(),
+                    currentUser.getUsername(),
+                    LocalDateTime.now()
+                );
+                eventPublisherService.publishUserCreatedEvent(userEvent);
+            }
+            
             return new AuthResponse(null, request.getUsername(), 
                 "User created successfully with role " + request.getRole(), true);
 
@@ -122,10 +158,22 @@ public class AdminServiceImpl implements AdminService {
 
             Role oldRole = targetUser.getRole();
             targetUser.setRole(request.getRole());
-            userRepository.save(targetUser);
+            User updatedUser = userRepository.save(targetUser);
 
             log.info("User {} role changed from {} to {} by super admin {}", 
                 request.getUsername(), oldRole, request.getRole(), currentUser.getUsername());
+            
+            // Publish role change event
+            UserRoleChangedEvent roleChangeEvent = new UserRoleChangedEvent(
+                updatedUser.getId(),
+                updatedUser.getUsername(),
+                oldRole,
+                updatedUser.getRole(),
+                currentUser.getUsername(),
+                currentUser.getRole().getName(),
+                LocalDateTime.now()
+            );
+            eventPublisherService.publishUserRoleChangedEvent(roleChangeEvent);
             
             return new AuthResponse(null, request.getUsername(), 
                 String.format("User role changed from %s to %s", oldRole, request.getRole()), true);

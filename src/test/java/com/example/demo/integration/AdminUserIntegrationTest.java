@@ -1,22 +1,27 @@
 package com.example.demo.integration;
 
+import com.example.demo.domain.Person;
 import com.example.demo.domain.Role;
 import com.example.demo.domain.User;
+import com.example.demo.domain.repository.PersonRepository;
 import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.service.AuthService;
 import com.example.demo.domain.dto.LoginRequest;
 import com.example.demo.domain.dto.AuthResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
+@DirtiesContext
 @Transactional
 public class AdminUserIntegrationTest {
 
@@ -24,10 +29,45 @@ public class AdminUserIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private PersonRepository personRepository;
+
+    @Autowired
     private AuthService authService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @BeforeEach
+    public void setUp() {
+        // Create Super Admin user manually since DataInitializer doesn't run in tests
+        // (DataInitializer excludes "test" and "h2" profiles)
+        createSuperAdminIfNotExists();
+    }
+    
+    private void createSuperAdminIfNotExists() {
+        if (userRepository.findByUsername("superadmin").isEmpty()) {
+            // Create Person for super admin
+            Person person = new Person();
+            person.setFirstName("Super");
+            person.setLastName("Admin");
+            person.setEmail("superadmin@example.com");
+            person.setPhoneNumber("0000000000");
+            person.setAddress("System Administrator");
+            
+            Person savedPerson = personRepository.save(person);
+
+            // Create Super Admin User
+            User superAdmin = new User();
+            superAdmin.setUsername("superadmin");
+            superAdmin.setPassword(passwordEncoder.encode("superadmin123"));
+            superAdmin.setPerson(savedPerson);
+            superAdmin.setActive(true);
+            superAdmin.setEmailVerified(true);
+            superAdmin.setRole(Role.SUPER_ADMIN);
+
+            userRepository.save(superAdmin);
+        }
+    }
 
     @Test
     public void testSuperAdminUserExists() {

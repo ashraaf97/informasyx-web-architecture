@@ -131,7 +131,7 @@ public class SecurityUtilsTest {
         when(requestAttributes.getRequest()).thenReturn(request);
         when(request.getHeader("Authorization")).thenReturn(authHeader);
         when(authService.getUsernameFromToken(token)).thenReturn(null);
-        when(authService.isValidToken(token)).thenReturn(false);
+        lenient().when(authService.isValidToken(token)).thenReturn(false);
 
         try (MockedStatic<RequestContextHolder> mockedStatic = mockStatic(RequestContextHolder.class)) {
             mockedStatic.when(RequestContextHolder::getRequestAttributes).thenReturn(requestAttributes);

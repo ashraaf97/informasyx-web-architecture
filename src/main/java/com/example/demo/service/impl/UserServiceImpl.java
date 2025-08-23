@@ -6,6 +6,7 @@ import com.example.demo.domain.dto.PersonDTO;
 import com.example.demo.domain.dto.UserCreateDTO;
 import com.example.demo.domain.dto.UserDTO;
 import com.example.demo.domain.mapper.UserMapper;
+import com.example.demo.domain.repository.PersonRepository;
 import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.service.PersonService;
 import com.example.demo.service.UserService;
@@ -22,6 +23,7 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final PersonRepository personRepository;
     private final PersonService personService;
     private final UserMapper userMapper;
 
@@ -49,13 +51,22 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Username already exists: " + userCreateDTO.getUsername());
         }
 
-        // Create the person first if it exists
-        if (userCreateDTO.getPerson() != null) {
+        // Create the person first if it doesn't have an ID yet
+        if (userCreateDTO.getPerson() != null && userCreateDTO.getPerson().getId() == null) {
             PersonDTO savedPersonDTO = personService.createPerson(userCreateDTO.getPerson());
             userCreateDTO.setPerson(savedPersonDTO); // Use the fully populated PersonDTO
         }
 
         User user = userMapper.toEntity(userCreateDTO);
+        
+        // If person has an ID, fetch it from database to avoid detached entity issues
+        if (userCreateDTO.getPerson() != null && userCreateDTO.getPerson().getId() != null) {
+            Optional<Person> existingPerson = personRepository.findById(userCreateDTO.getPerson().getId());
+            if (existingPerson.isPresent()) {
+                user.setPerson(existingPerson.get());
+            }
+        }
+        
         User savedUser = userRepository.save(user);
         return userMapper.toDto(savedUser);
     }

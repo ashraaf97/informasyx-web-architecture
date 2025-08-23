@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -71,6 +73,9 @@ public class AuthServiceImpl implements AuthService {
             log.info("User {} with role {} logged in successfully", user.getUsername(), user.getRole());
             return AuthResponse.success(user.getUsername(), token, user.getRole());
 
+        } catch (DisabledException | LockedException e) {
+            log.warn("Login attempt for deactivated user: {}", loginRequest.getUsername());
+            return AuthResponse.failure("User account is deactivated");
         } catch (BadCredentialsException e) {
             log.warn("Failed login attempt for username: {}", loginRequest.getUsername());
             return AuthResponse.failure("Invalid username or password");

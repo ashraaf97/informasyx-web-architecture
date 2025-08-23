@@ -6,13 +6,15 @@ import com.example.demo.domain.User;
 import com.example.demo.domain.repository.PersonRepository;
 import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.service.impl.AuthServiceImpl;
+import com.example.demo.service.EventPublisherService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 @AutoConfigureWebMvc
 @Transactional
 public class RoleBasedAccessControlTest {
@@ -42,11 +44,21 @@ public class RoleBasedAccessControlTest {
     @Autowired
     private AuthServiceImpl authService;
 
+    @MockBean
+    private EventPublisherService eventPublisherService;
+
     private MockMvc mockMvc;
     private String superAdminToken;
     private String adminToken;
     private String userToken;
     private String invalidToken;
+    
+    private Long superAdminUserId;
+    private Long adminUserId;
+    private Long testUserId;
+    private Long superAdminPersonId;
+    private Long adminPersonId;
+    private Long testUserPersonId;
 
     @BeforeEach
     void setUp() {
@@ -69,6 +81,7 @@ public class RoleBasedAccessControlTest {
         superAdminPerson.setLastName("SuperAdmin");
         superAdminPerson.setEmail("testsuperadmin@example.com");
         superAdminPerson = personRepository.save(superAdminPerson);
+        superAdminPersonId = superAdminPerson.getId();
 
         User superAdmin = new User();
         superAdmin.setUsername("testsuperadmin");
@@ -77,7 +90,8 @@ public class RoleBasedAccessControlTest {
         superAdmin.setRole(Role.SUPER_ADMIN);
         superAdmin.setActive(true);
         superAdmin.setEmailVerified(true);
-        userRepository.save(superAdmin);
+        superAdmin = userRepository.save(superAdmin);
+        superAdminUserId = superAdmin.getId();
 
         // Create Admin
         Person adminPerson = new Person();
@@ -85,6 +99,7 @@ public class RoleBasedAccessControlTest {
         adminPerson.setLastName("Admin");
         adminPerson.setEmail("testadmin@example.com");
         adminPerson = personRepository.save(adminPerson);
+        adminPersonId = adminPerson.getId();
 
         User admin = new User();
         admin.setUsername("testadmin");
@@ -93,7 +108,8 @@ public class RoleBasedAccessControlTest {
         admin.setRole(Role.ADMIN);
         admin.setActive(true);
         admin.setEmailVerified(true);
-        userRepository.save(admin);
+        admin = userRepository.save(admin);
+        adminUserId = admin.getId();
 
         // Create Regular User
         Person userPerson = new Person();
@@ -101,6 +117,7 @@ public class RoleBasedAccessControlTest {
         userPerson.setLastName("User");
         userPerson.setEmail("testuser@example.com");
         userPerson = personRepository.save(userPerson);
+        testUserPersonId = userPerson.getId();
 
         User user = new User();
         user.setUsername("testuser");
@@ -109,13 +126,25 @@ public class RoleBasedAccessControlTest {
         user.setRole(Role.USER);
         user.setActive(true);
         user.setEmailVerified(true);
-        userRepository.save(user);
+        user = userRepository.save(user);
+        testUserId = user.getId();
     }
 
     private String generateAndStoreToken(String username) {
         String token = "TOKEN_" + username + "_" + System.currentTimeMillis();
-        // Store token in auth service for validation
-        authService.getUsernameFromToken(token); // This would normally store the token
+        
+        // Store token in auth service's tokenStore using reflection
+        try {
+            java.lang.reflect.Field tokenStoreField = authService.getClass().getDeclaredField("tokenStore");
+            tokenStoreField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, String> tokenStore = (java.util.Map<String, String>) tokenStoreField.get(authService);
+            tokenStore.put(token, username);
+        } catch (Exception e) {
+            // If reflection fails, log it but continue
+            System.err.println("Failed to add token to tokenStore: " + e.getMessage());
+        }
+        
         return token;
     }
 
@@ -156,28 +185,28 @@ public class RoleBasedAccessControlTest {
 
     @Test
     void getUserById_SuperAdmin_Success() throws Exception {
-        mockMvc.perform(get("/api/users/1")
+        mockMvc.perform(get("/api/users/" + superAdminUserId)
                 .header("Authorization", superAdminToken))
                 .andExpect(status().isOk());
     }
 
     @Test
     void getUserById_Admin_Success() throws Exception {
-        mockMvc.perform(get("/api/users/1")
+        mockMvc.perform(get("/api/users/" + adminUserId)
                 .header("Authorization", adminToken))
                 .andExpect(status().isOk());
     }
 
     @Test
     void getUserById_User_Forbidden() throws Exception {
-        mockMvc.perform(get("/api/users/1")
+        mockMvc.perform(get("/api/users/" + testUserId)
                 .header("Authorization", userToken))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void deleteUser_SuperAdmin_Success() throws Exception {
-        mockMvc.perform(delete("/api/users/1")
+        mockMvc.perform(delete("/api/users/" + testUserId)
                 .header("Authorization", superAdminToken))
                 .andExpect(status().isNoContent());
     }
@@ -220,28 +249,28 @@ public class RoleBasedAccessControlTest {
 
     @Test
     void getPersonById_SuperAdmin_Success() throws Exception {
-        mockMvc.perform(get("/api/persons/1")
+        mockMvc.perform(get("/api/persons/" + superAdminPersonId)
                 .header("Authorization", superAdminToken))
                 .andExpect(status().isOk());
     }
 
     @Test
     void getPersonById_Admin_Success() throws Exception {
-        mockMvc.perform(get("/api/persons/1")
+        mockMvc.perform(get("/api/persons/" + adminPersonId)
                 .header("Authorization", adminToken))
                 .andExpect(status().isOk());
     }
 
     @Test
     void getPersonById_User_Success() throws Exception {
-        mockMvc.perform(get("/api/persons/1")
+        mockMvc.perform(get("/api/persons/" + testUserPersonId)
                 .header("Authorization", userToken))
                 .andExpect(status().isOk());
     }
 
     @Test
     void deletePerson_SuperAdmin_Success() throws Exception {
-        mockMvc.perform(delete("/api/persons/1")
+        mockMvc.perform(delete("/api/persons/" + testUserPersonId)
                 .header("Authorization", superAdminToken))
                 .andExpect(status().isNoContent());
     }
@@ -288,7 +317,7 @@ public class RoleBasedAccessControlTest {
     void updateUser_SuperAdmin_Success() throws Exception {
         String userJson = "{\"username\":\"updateduser\",\"password\":\"newpassword\"}";
         
-        mockMvc.perform(put("/api/users/1")
+        mockMvc.perform(put("/api/users/" + testUserId)
                 .header("Authorization", superAdminToken)
                 .contentType("application/json")
                 .content(userJson))
@@ -299,7 +328,7 @@ public class RoleBasedAccessControlTest {
     void updateUser_Admin_Success() throws Exception {
         String userJson = "{\"username\":\"updateduser\",\"password\":\"newpassword\"}";
         
-        mockMvc.perform(put("/api/users/1")
+        mockMvc.perform(put("/api/users/" + testUserId)
                 .header("Authorization", adminToken)
                 .contentType("application/json")
                 .content(userJson))
@@ -310,7 +339,7 @@ public class RoleBasedAccessControlTest {
     void updateUser_User_Forbidden() throws Exception {
         String userJson = "{\"username\":\"updateduser\",\"password\":\"newpassword\"}";
         
-        mockMvc.perform(put("/api/users/1")
+        mockMvc.perform(put("/api/users/" + testUserId)
                 .header("Authorization", userToken)
                 .contentType("application/json")
                 .content(userJson))
@@ -321,7 +350,7 @@ public class RoleBasedAccessControlTest {
     void updatePerson_SuperAdmin_Success() throws Exception {
         String personJson = "{\"firstName\":\"Updated\",\"lastName\":\"Person\",\"email\":\"updated@example.com\"}";
         
-        mockMvc.perform(put("/api/persons/1")
+        mockMvc.perform(put("/api/persons/" + testUserPersonId)
                 .header("Authorization", superAdminToken)
                 .contentType("application/json")
                 .content(personJson))
@@ -332,7 +361,7 @@ public class RoleBasedAccessControlTest {
     void updatePerson_Admin_Success() throws Exception {
         String personJson = "{\"firstName\":\"Updated\",\"lastName\":\"Person\",\"email\":\"updated@example.com\"}";
         
-        mockMvc.perform(put("/api/persons/1")
+        mockMvc.perform(put("/api/persons/" + testUserPersonId)
                 .header("Authorization", adminToken)
                 .contentType("application/json")
                 .content(personJson))
@@ -343,7 +372,7 @@ public class RoleBasedAccessControlTest {
     void updatePerson_User_Success() throws Exception {
         String personJson = "{\"firstName\":\"Updated\",\"lastName\":\"Person\",\"email\":\"updated@example.com\"}";
         
-        mockMvc.perform(put("/api/persons/1")
+        mockMvc.perform(put("/api/persons/" + testUserPersonId)
                 .header("Authorization", userToken)
                 .contentType("application/json")
                 .content(personJson))

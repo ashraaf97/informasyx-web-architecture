@@ -84,7 +84,7 @@ public class DataInitializerTest {
     void run_ExceptionDuringCreation_HandledGracefully() throws Exception {
         // Arrange
         when(userRepository.findByUsername("superadmin")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("superadmin123")).thenReturn("encoded_password");
+        lenient().when(passwordEncoder.encode("superadmin123")).thenReturn("encoded_password");
         when(personRepository.save(any())).thenThrow(new RuntimeException("Database error"));
 
         // Act & Assert - Should not throw exception
@@ -184,8 +184,8 @@ public class DataInitializerTest {
         // Verify that the method attempted to create super admin but handled the exception
         verify(userRepository).findByUsername("superadmin");
         verify(passwordEncoder).encode("superadmin123");
-        // Should not proceed to save operations due to encoding exception
-        verify(personRepository, never()).save(any());
+        // Person should be saved before password encoding, but User should not be saved due to encoding exception
+        verify(personRepository).save(any());
         verify(userRepository, never()).save(any(User.class));
     }
 

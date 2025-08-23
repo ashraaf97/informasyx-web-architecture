@@ -9,6 +9,7 @@ import com.example.demo.domain.dto.ChangeRoleRequest;
 import com.example.demo.domain.repository.PersonRepository;
 import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.security.SecurityUtils;
+import com.example.demo.service.EventPublisherService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +39,9 @@ public class AdminServiceImplTest {
 
     @Mock
     private SecurityUtils securityUtils;
+
+    @Mock
+    private EventPublisherService eventPublisherService;
 
     @InjectMocks
     private AdminServiceImpl adminService;

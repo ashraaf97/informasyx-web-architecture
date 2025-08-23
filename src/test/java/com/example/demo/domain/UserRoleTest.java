@@ -7,12 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@ActiveProfiles("test")
+@TestPropertySource(locations = "classpath:application-test.properties")
 public class UserRoleTest {
 
     @Autowired
@@ -231,10 +231,19 @@ public class UserRoleTest {
     }
 
     private User createUserWithRole(String username, Role role) {
+        // Create a unique person for each user to avoid person_id constraint violations
+        Person person = new Person();
+        person.setFirstName("Test");
+        person.setLastName(username);
+        person.setEmail(username + "@example.com");
+        person.setPhoneNumber("1234567890");
+        person.setAddress("123 Test St");
+        person = entityManager.persistAndFlush(person);
+
         User user = new User();
         user.setUsername(username);
         user.setPassword("password");
-        user.setPerson(testPerson);
+        user.setPerson(person);
         user.setRole(role);
         user.setActive(true);
         user.setEmailVerified(true);
