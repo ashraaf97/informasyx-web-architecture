@@ -1,0 +1,13 @@
+[]
+{"test":"User Sign Up - Valid Data","endpoint":"/api/auth/signup","method":"POST","status_code":,"response_time":,"expected_status":200,"result":"FAIL","timestamp":"2025-08-30T02:29:26+08:00"}
+{"test":"User Sign Up - Invalid Data","endpoint":"/api/auth/signup","method":"POST","status_code":,"response_time":,"expected_status":400,"result":"FAIL","timestamp":"2025-08-30T02:29:26+08:00"}
+{"test":"User Login - Valid Credentials","endpoint":"/api/auth/login","method":"POST","status_code":,"response_time":,"expected_status":200,"result":"FAIL","timestamp":"2025-08-30T02:29:27+08:00"}
+{"test":"User Login - Invalid Credentials","endpoint":"/api/auth/login","method":"POST","status_code":,"response_time":,"expected_status":400,"result":"FAIL","timestamp":"2025-08-30T02:29:27+08:00"}
+{"test":"Forgot Password","endpoint":"/api/auth/forgot-password","method":"POST","status_code":,"response_time":,"expected_status":200,"result":"FAIL","timestamp":"2025-08-30T02:29:27+08:00"}
+{"test":"Get All Users - Unauthorized","endpoint":"/api/users","method":"GET","status_code":,"response_time":,"expected_status":401/403,"result":"FAIL","timestamp":"2025-08-30T02:29:27+08:00"}
+{"test":"Create User - Unauthorized","endpoint":"/api/admin/users","method":"POST","status_code":,"response_time":,"expected_status":401/403,"result":"FAIL","timestamp":"2025-08-30T02:29:27+08:00"}
+{"test":"Get All Persons - Unauthorized","endpoint":"/api/persons","method":"GET","status_code":,"response_time":,"expected_status":401/403,"result":"FAIL","timestamp":"2025-08-30T02:29:27+08:00"}
+{"test":"SQL Injection Protection","endpoint":"/api/auth/login","method":"POST","status_code":,"response_time":,"expected_status":400,"result":"FAIL","timestamp":"2025-08-30T02:29:27+08:00"}
+{"test":"XSS Protection","endpoint":"/api/auth/signup","method":"POST","status_code":,"response_time":,"expected_status":400,"result":"FAIL","timestamp":"2025-08-30T02:29:27+08:00"}
+{"test":"Invalid JSON Handling","endpoint":"/api/auth/login","method":"POST","status_code":,"response_time":,"expected_status":400,"result":"FAIL","timestamp":"2025-08-30T02:29:27+08:00"}
+{"test":"Missing Content-Type Header","endpoint":"/api/auth/login","method":"POST","status_code":500,"response_time":0,"expected_status":400/415,"result":"FAIL","timestamp":"2025-08-30T02:29:27+08:00"}
