@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "spring.kafka.bootstrap-servers=",
     "app.kafka.enabled=false"
 })
-@TestPropertySource(locations = "classpath:application-test.properties")
+@TestPropertySource(locations = "classpath:application-integration.properties")
 @AutoConfigureWebMvc
 @DirtiesContext
 @Transactional

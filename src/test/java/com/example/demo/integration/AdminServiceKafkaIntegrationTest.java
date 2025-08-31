@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-@TestPropertySource(locations = "classpath:application-test.properties", properties = {
+@TestPropertySource(locations = "classpath:application-integration.properties", properties = {
     "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
     "app.kafka.topics.user-events=test-user-events",
     "app.kafka.topics.admin-events=test-admin-events"
@@ -78,7 +78,7 @@ class AdminServiceKafkaIntegrationTest {
         superAdminPerson = personRepository.save(superAdminPerson);
 
         superAdminUser = new User();
-        superAdminUser.setUsername("superadmin");
+        superAdminUser.setUsername("testsuperadmin");
         superAdminUser.setPassword(passwordEncoder.encode("password"));
         superAdminUser.setPerson(superAdminPerson);
         superAdminUser.setRole(Role.SUPER_ADMIN);
@@ -88,13 +88,13 @@ class AdminServiceKafkaIntegrationTest {
 
         // Create admin user for testing
         Person adminPerson = new Person();
-        adminPerson.setFirstName("Admin");
-        adminPerson.setLastName("User");
-        adminPerson.setEmail("admin@test.com");
+        adminPerson.setFirstName("Test");
+        adminPerson.setLastName("Admin");
+        adminPerson.setEmail("testadmin@test.com");
         adminPerson = personRepository.save(adminPerson);
 
         adminUser = new User();
-        adminUser.setUsername("admin");
+        adminUser.setUsername("testadmin");
         adminUser.setPassword(passwordEncoder.encode("password"));
         adminUser.setPerson(adminPerson);
         adminUser.setRole(Role.ADMIN);
@@ -140,7 +140,7 @@ class AdminServiceKafkaIntegrationTest {
         assertEquals("Test", capturedEvent.getFirstName());
         assertEquals("User", capturedEvent.getLastName());
         assertEquals(Role.USER, capturedEvent.getRole());
-        assertEquals("superadmin", capturedEvent.getCreatedBy());
+        assertEquals("testsuperadmin", capturedEvent.getCreatedBy());
         assertEquals("USER_CREATED", capturedEvent.getEventType());
         assertNotNull(capturedEvent.getUserId());
         assertNotNull(capturedEvent.getCreatedAt());
@@ -175,7 +175,7 @@ class AdminServiceKafkaIntegrationTest {
         assertEquals("Test", capturedEvent.getFirstName());
         assertEquals("Admin", capturedEvent.getLastName());
         assertEquals(Role.ADMIN, capturedEvent.getRole());
-        assertEquals("superadmin", capturedEvent.getCreatedBy());
+        assertEquals("testsuperadmin", capturedEvent.getCreatedBy());
         assertEquals("SUPER_ADMIN", capturedEvent.getCreatedByRole());
         assertEquals("ADMIN_CREATED", capturedEvent.getEventType());
         assertNotNull(capturedEvent.getAdminId());
@@ -221,7 +221,7 @@ class AdminServiceKafkaIntegrationTest {
         assertEquals("rolechangeuser", capturedEvent.getUsername());
         assertEquals(Role.USER, capturedEvent.getPreviousRole());
         assertEquals(Role.ADMIN, capturedEvent.getNewRole());
-        assertEquals("superadmin", capturedEvent.getChangedBy());
+        assertEquals("testsuperadmin", capturedEvent.getChangedBy());
         assertEquals("SUPER_ADMIN", capturedEvent.getChangedByRole());
         assertEquals("USER_ROLE_CHANGED", capturedEvent.getEventType());
         assertNotNull(capturedEvent.getUserId());
@@ -254,7 +254,7 @@ class AdminServiceKafkaIntegrationTest {
         assertNotNull(capturedEvent);
         assertEquals("regularuser456", capturedEvent.getUsername());
         assertEquals(Role.USER, capturedEvent.getRole());
-        assertEquals("admin", capturedEvent.getCreatedBy()); // Should be created by admin
+        assertEquals("testadmin", capturedEvent.getCreatedBy()); // Should be created by admin
         assertEquals("USER_CREATED", capturedEvent.getEventType());
     }
 
@@ -264,7 +264,7 @@ class AdminServiceKafkaIntegrationTest {
         authenticateAsSuperAdmin();
         
         AdminCreateUserRequest request = new AdminCreateUserRequest();
-        request.setUsername("superadmin"); // This username already exists
+        request.setUsername("testsuperadmin"); // This username already exists
         request.setPassword("password123");
         request.setFirstName("Duplicate");
         request.setLastName("User");

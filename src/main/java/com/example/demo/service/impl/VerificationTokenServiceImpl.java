@@ -63,6 +63,9 @@ public class VerificationTokenServiceImpl implements VerificationTokenService {
 
     @Override
     public VerificationToken findByToken(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return null;
+        }
         return tokenRepository.findByToken(token).orElse(null);
     }
 
@@ -126,8 +129,10 @@ public class VerificationTokenServiceImpl implements VerificationTokenService {
     @Override
     @Transactional
     public void markTokenAsUsed(VerificationToken token) {
-        token.setUsed(true);
-        tokenRepository.save(token);
+        if (token != null) {
+            token.setUsed(true);
+            tokenRepository.save(token);
+        }
     }
 
     @Override
