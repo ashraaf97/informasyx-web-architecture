@@ -66,7 +66,7 @@ class AuthControllerIntegrationTest {
 
         testUser = new User();
         testUser.setUsername("johndoe");
-        testUser.setPassword(passwordEncoder.encode("password123"));
+        testUser.setPassword(passwordEncoder.encode("Password123!"));
         testUser.setPerson(testPerson);
         testUser.setActive(true);
         testUser.setEmailVerified(true);
@@ -81,8 +81,8 @@ class AuthControllerIntegrationTest {
     void signUp_Success() throws Exception {
         SignUpRequest signUpRequest = new SignUpRequest();
         signUpRequest.setUsername("newuser");
-        signUpRequest.setPassword("newpass123");
-        signUpRequest.setConfirmPassword("newpass123");
+        signUpRequest.setPassword("NewPass123!");
+        signUpRequest.setConfirmPassword("NewPass123!");
         signUpRequest.setFirstName("Jane");
         signUpRequest.setLastName("Smith");
         signUpRequest.setEmail("jane.smith@example.com");
@@ -102,8 +102,8 @@ class AuthControllerIntegrationTest {
     void signUp_UsernameAlreadyExists() throws Exception {
         SignUpRequest signUpRequest = new SignUpRequest();
         signUpRequest.setUsername("johndoe"); // Username already exists
-        signUpRequest.setPassword("newpass123");
-        signUpRequest.setConfirmPassword("newpass123");
+        signUpRequest.setPassword("NewPass123!");
+        signUpRequest.setConfirmPassword("NewPass123!");
         signUpRequest.setFirstName("Jane");
         signUpRequest.setLastName("Smith");
         signUpRequest.setEmail("jane.smith@example.com");
@@ -122,8 +122,8 @@ class AuthControllerIntegrationTest {
     void signUp_EmailAlreadyExists() throws Exception {
         SignUpRequest signUpRequest = new SignUpRequest();
         signUpRequest.setUsername("newuser");
-        signUpRequest.setPassword("newpass123");
-        signUpRequest.setConfirmPassword("newpass123");
+        signUpRequest.setPassword("NewPass123!");
+        signUpRequest.setConfirmPassword("NewPass123!");
         signUpRequest.setFirstName("Jane");
         signUpRequest.setLastName("Smith");
         signUpRequest.setEmail("john.doe@example.com"); // Email already exists
@@ -142,8 +142,8 @@ class AuthControllerIntegrationTest {
     void signUp_PasswordMismatch() throws Exception {
         SignUpRequest signUpRequest = new SignUpRequest();
         signUpRequest.setUsername("newuser");
-        signUpRequest.setPassword("newpass123");
-        signUpRequest.setConfirmPassword("differentpass123"); // Passwords don't match
+        signUpRequest.setPassword("NewPass123!");
+        signUpRequest.setConfirmPassword("DifferentPass123!"); // Passwords don't match
         signUpRequest.setFirstName("Jane");
         signUpRequest.setLastName("Smith");
         signUpRequest.setEmail("jane.smith@example.com");
@@ -162,7 +162,7 @@ class AuthControllerIntegrationTest {
     void login_Success() throws Exception {
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("johndoe");
-        loginRequest.setPassword("password123");
+        loginRequest.setPassword("Password123!");
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -178,7 +178,7 @@ class AuthControllerIntegrationTest {
     void login_InvalidCredentials() throws Exception {
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("johndoe");
-        loginRequest.setPassword("wrongpassword");
+        loginRequest.setPassword("WrongPassword123!");
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -196,7 +196,7 @@ class AuthControllerIntegrationTest {
 
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("johndoe");
-        loginRequest.setPassword("password123");
+        loginRequest.setPassword("Password123!");
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -214,7 +214,7 @@ class AuthControllerIntegrationTest {
 
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("johndoe");
-        loginRequest.setPassword("password123");
+        loginRequest.setPassword("Password123!");
 
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -229,7 +229,7 @@ class AuthControllerIntegrationTest {
         // First login to get a token
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("johndoe");
-        loginRequest.setPassword("password123");
+        loginRequest.setPassword("Password123!");
 
         String loginResponse = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -288,7 +288,7 @@ class AuthControllerIntegrationTest {
         // First login to get a token
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("johndoe");
-        loginRequest.setPassword("password123");
+        loginRequest.setPassword("Password123!");
 
         String loginResponse = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -301,9 +301,9 @@ class AuthControllerIntegrationTest {
 
         // Change password
         ChangePasswordRequest changePasswordRequest = new ChangePasswordRequest();
-        changePasswordRequest.setCurrentPassword("password123");
-        changePasswordRequest.setNewPassword("newpassword123");
-        changePasswordRequest.setConfirmPassword("newpassword123");
+        changePasswordRequest.setCurrentPassword("Password123!");
+        changePasswordRequest.setNewPassword("NewPassword123!");
+        changePasswordRequest.setConfirmPassword("NewPassword123!");
 
         mockMvc.perform(put("/api/auth/change-password")
                 .header("Authorization", "Bearer " + token)
@@ -319,7 +319,7 @@ class AuthControllerIntegrationTest {
         // First login to get a token
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("johndoe");
-        loginRequest.setPassword("password123");
+        loginRequest.setPassword("Password123!");
 
         String loginResponse = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -332,9 +332,9 @@ class AuthControllerIntegrationTest {
 
         // Change password with wrong current password
         ChangePasswordRequest changePasswordRequest = new ChangePasswordRequest();
-        changePasswordRequest.setCurrentPassword("wrongpassword");
-        changePasswordRequest.setNewPassword("newpassword123");
-        changePasswordRequest.setConfirmPassword("newpassword123");
+        changePasswordRequest.setCurrentPassword("WrongPassword123!");
+        changePasswordRequest.setNewPassword("NewPassword123!");
+        changePasswordRequest.setConfirmPassword("NewPassword123!");
 
         mockMvc.perform(put("/api/auth/change-password")
                 .header("Authorization", "Bearer " + token)
@@ -350,7 +350,7 @@ class AuthControllerIntegrationTest {
         // First login to get a token
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername("johndoe");
-        loginRequest.setPassword("password123");
+        loginRequest.setPassword("Password123!");
 
         String loginResponse = mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -363,9 +363,9 @@ class AuthControllerIntegrationTest {
 
         // Change password with mismatched new passwords
         ChangePasswordRequest changePasswordRequest = new ChangePasswordRequest();
-        changePasswordRequest.setCurrentPassword("password123");
-        changePasswordRequest.setNewPassword("newpassword123");
-        changePasswordRequest.setConfirmPassword("differentpassword123");
+        changePasswordRequest.setCurrentPassword("Password123!");
+        changePasswordRequest.setNewPassword("NewPassword123!");
+        changePasswordRequest.setConfirmPassword("DifferentPassword123!");
 
         mockMvc.perform(put("/api/auth/change-password")
                 .header("Authorization", "Bearer " + token)
@@ -388,8 +388,8 @@ class AuthControllerIntegrationTest {
     void resetPassword_WithValidRequest() throws Exception {
         ResetPasswordRequest resetPasswordRequest = new ResetPasswordRequest();
         resetPasswordRequest.setToken("test-reset-token");
-        resetPasswordRequest.setNewPassword("newpassword123");
-        resetPasswordRequest.setConfirmPassword("newpassword123");
+        resetPasswordRequest.setNewPassword("NewPassword123!");
+        resetPasswordRequest.setConfirmPassword("NewPassword123!");
 
         mockMvc.perform(post("/api/auth/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -402,8 +402,8 @@ class AuthControllerIntegrationTest {
     void resetPassword_PasswordMismatch() throws Exception {
         ResetPasswordRequest resetPasswordRequest = new ResetPasswordRequest();
         resetPasswordRequest.setToken("test-reset-token");
-        resetPasswordRequest.setNewPassword("newpassword123");
-        resetPasswordRequest.setConfirmPassword("differentpassword123");
+        resetPasswordRequest.setNewPassword("NewPassword123!");
+        resetPasswordRequest.setConfirmPassword("DifferentPassword123!");
 
         mockMvc.perform(post("/api/auth/reset-password")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureWebMvc
-@TestPropertySource(locations = "classpath:application-test.properties")
+@TestPropertySource(locations = "classpath:application-integration.properties")
 @Transactional
 class UserControllerIntegrationTest {
 
@@ -357,14 +357,19 @@ class UserControllerIntegrationTest {
         mockMvc.perform(get("/api/users/username/{username}", "admin"))
                 .andExpect(status().isUnauthorized());
 
+        // Create valid request body for POST/PUT tests to ensure authentication is checked before validation
+        UserCreateDTO validUserDTO = new UserCreateDTO();
+        validUserDTO.setUsername("testuser123");
+        validUserDTO.setPassword("testpassword123");
+
         mockMvc.perform(post("/api/users")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
+                .content(objectMapper.writeValueAsString(validUserDTO)))
                 .andExpect(status().isUnauthorized());
 
         mockMvc.perform(put("/api/users/{id}", testUser.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
+                .content(objectMapper.writeValueAsString(validUserDTO)))
                 .andExpect(status().isUnauthorized());
 
         mockMvc.perform(delete("/api/users/{id}", testUser.getId()))

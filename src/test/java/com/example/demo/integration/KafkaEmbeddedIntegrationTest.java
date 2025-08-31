@@ -43,7 +43,7 @@ import static org.junit.jupiter.api.Assertions.*;
         "port=9092"
     }
 )
-@TestPropertySource(locations = "classpath:application-test.properties", properties = {
+@TestPropertySource(locations = "classpath:application-integration.properties", properties = {
     "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
     "app.kafka.topics.user-events=test-user-events",
     "app.kafka.topics.admin-events=test-admin-events"

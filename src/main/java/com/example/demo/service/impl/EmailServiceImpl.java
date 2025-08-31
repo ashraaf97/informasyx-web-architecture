@@ -56,7 +56,7 @@ public class EmailServiceImpl implements EmailService {
             
             mailSender.send(message);
             log.info("Email verification sent to: {}", user.getPerson().getEmail());
-        } catch (TemplateEngineException e) {
+        } catch (RuntimeException e) {
             log.error("Failed to process email verification template for: {}", user.getPerson().getEmail(), e);
             throw new EmailServiceException(new EmailTemplateException(
                 "Failed to process email verification template", 
@@ -94,7 +94,7 @@ public class EmailServiceImpl implements EmailService {
             
             mailSender.send(message);
             log.info("Password reset email sent to: {}", user.getPerson().getEmail());
-        } catch (TemplateEngineException e) {
+        } catch (RuntimeException e) {
             log.error("Failed to process password reset template for: {}", user.getPerson().getEmail(), e);
             throw new EmailServiceException(new EmailTemplateException(
                 "Failed to process password reset template", 
@@ -132,7 +132,7 @@ public class EmailServiceImpl implements EmailService {
             
             mailSender.send(message);
             log.info("Welcome email sent to: {}", user.getPerson().getEmail());
-        } catch (TemplateEngineException e) {
+        } catch (RuntimeException e) {
             log.error("Failed to process welcome email template for: {}", user.getPerson().getEmail(), e);
             // Don't throw exception for welcome email failure - just log
         } catch (MessagingException e) {

@@ -30,6 +30,5 @@ public class AdminCreateUserRequest {
     private String phoneNumber;
     private String address;
 
-    @NotNull(message = "Role is required")
     private Role role;
 }
