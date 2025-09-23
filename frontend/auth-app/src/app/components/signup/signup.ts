@@ -17,15 +17,12 @@ export class SignUp {
     firstName: '',
     lastName: '',
     phoneNumber: '',
-    address: '',
-    password: '',
-    confirmPassword: ''
+    address: ''
   };
   
   errorMessage = '';
   successMessage = '';
   isLoading = false;
-  showPassword = false;
 
   constructor(
     private authService: AuthService,
@@ -66,7 +63,7 @@ export class SignUp {
   private validateForm(): boolean {
     if (!this.signUpData.username || !this.signUpData.email || 
         !this.signUpData.firstName || !this.signUpData.lastName || 
-        !this.signUpData.password || !this.signUpData.confirmPassword) {
+        !this.signUpData.phoneNumber) {
       this.errorMessage = 'Please fill in all required fields';
       return false;
     }
@@ -82,27 +79,13 @@ export class SignUp {
       return false;
     }
 
-    if (this.signUpData.password !== this.signUpData.confirmPassword) {
-      this.errorMessage = 'Password and confirm password do not match';
-      return false;
-    }
-
-    if (this.signUpData.password.length < 8) {
-      this.errorMessage = 'Password must be at least 8 characters long';
-      return false;
-    }
-
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(this.signUpData.password)) {
-      this.errorMessage = 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character';
+    const phoneRegex = /^60\d{9,10}$/;
+    if (!phoneRegex.test(this.signUpData.phoneNumber)) {
+      this.errorMessage = 'Phone number must start with 60 and contain 11-12 digits total';
       return false;
     }
 
     return true;
-  }
-
-  togglePasswordVisibility(): void {
-    this.showPassword = !this.showPassword;
   }
 
   onCancel(): void {
@@ -116,9 +99,7 @@ export class SignUp {
       firstName: '',
       lastName: '',
       phoneNumber: '',
-      address: '',
-      password: '',
-      confirmPassword: ''
+      address: ''
     };
   }
 }

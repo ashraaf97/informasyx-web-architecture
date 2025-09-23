@@ -44,7 +44,7 @@ public class SecurityConfig {
 
             return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
-                .password(user.getPassword())
+                .password("") // No password needed - phone-based auth
                 .authorities(new ArrayList<>())
                 .accountExpired(false)
                 .accountLocked(!user.isActive())

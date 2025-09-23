@@ -11,5 +11,6 @@
     <include file="db/changelog/changes/03-insert-admin-user.xml"/>
     <include file="db/changelog/changes/04-create-verification-token-table.xml"/>
     <include file="db/changelog/changes/05-add-email-verified-to-user.xml"/>
+    <include file="db/changelog/changes/06-modify-user-for-phone-auth.xml"/>
 
 </databaseChangeLog> 

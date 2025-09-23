@@ -29,19 +29,13 @@ public class SignUpRequest {
     @Size(max = 50, message = "Last name cannot exceed 50 characters")
     private String lastName;
 
-    @Size(max = 20, message = "Phone number cannot exceed 20 characters")
+    @NotBlank(message = "Phone number is required")
+    @Pattern(
+        regexp = "^60\\d{9,10}$",
+        message = "Phone number must start with 60 and contain 11-12 digits total"
+    )
     private String phoneNumber;
 
     @Size(max = 255, message = "Address cannot exceed 255 characters")
     private String address;
-
-    @NotBlank(message = "Password is required")
-    @Pattern(
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$",
-        message = "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
-    )
-    private String password;
-
-    @NotBlank(message = "Confirm password is required")
-    private String confirmPassword;
 }

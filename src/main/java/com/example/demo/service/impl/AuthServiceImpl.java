@@ -7,6 +7,8 @@ import com.example.demo.domain.dto.AuthResponse;
 import com.example.demo.domain.dto.ChangePasswordRequest;
 import com.example.demo.domain.dto.ForgotPasswordRequest;
 import com.example.demo.domain.dto.LoginRequest;
+import com.example.demo.domain.dto.PhoneLoginRequest;
+import com.example.demo.domain.dto.PhoneVerificationRequest;
 import com.example.demo.domain.dto.ResetPasswordRequest;
 import com.example.demo.domain.dto.SignUpRequest;
 import com.example.demo.domain.repository.PersonRepository;
@@ -14,26 +16,26 @@ import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.service.AuthService;
 import com.example.demo.domain.VerificationToken;
 import com.example.demo.service.EmailService;
+import com.example.demo.service.PhoneVerificationService;
+import com.example.demo.service.TokenService;
 import com.example.demo.service.VerificationTokenService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl implements AuthService {
+
+    // Constants
+    private static final String PHONE_REGEX = "^60\\d{9,10}$";
+    private static final String ERROR_OCCURRED = "Error occurred";
+    private static final String PASSWORD_RESET_MESSAGE = "If an account with this email exists, you will receive password reset instructions.";
 
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
@@ -41,55 +43,96 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final VerificationTokenService verificationTokenService;
     private final EmailService emailService;
-    
-    private final Map<String, String> tokenStore = new ConcurrentHashMap<>();
+    private final PhoneVerificationService phoneVerificationService;
+    private final TokenService tokenService;
 
     @Override
     public AuthResponse login(LoginRequest loginRequest) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                    loginRequest.getUsername(),
-                    loginRequest.getPassword()
-                )
-            );
+        // Legacy login method - deprecated due to password removal
+        return AuthResponse.failure("Password-based authentication is no longer supported. Please use phone number authentication.");
+    }
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+    @Override
+    public AuthResponse sendPhoneVerificationCode(PhoneLoginRequest phoneLoginRequest) {
+        try {
+            String phoneNumber = phoneLoginRequest.getPhoneNumber();
             
-            User user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new BadCredentialsException("User not found"));
+            // Validate phone number format
+            if (!phoneNumber.matches(PHONE_REGEX)) {
+                return AuthResponse.failure("Invalid phone number format. Must start with 60 and contain 11-12 digits total.");
+            }
+
+            // Check if user exists with this phone number
+            User user = userRepository.findByPhoneNumber(phoneNumber).orElse(null);
+            if (user == null) {
+                return AuthResponse.failure("No account found with this phone number");
+            }
 
             if (!user.isActive()) {
                 return AuthResponse.failure("User account is deactivated");
             }
 
-            if (!user.isEmailVerified()) {
-                return AuthResponse.failure("Please verify your email address before logging in");
+            // Send verification code
+            return phoneVerificationService.sendVerificationCode(phoneNumber);
+
+        } catch (Exception e) {
+            log.error("Error sending verification code for phone number: {}", phoneLoginRequest.getPhoneNumber(), e);
+            return AuthResponse.failure(ERROR_OCCURRED);
+        }
+    }
+
+    @Override
+    public AuthResponse verifyPhoneAndLogin(PhoneVerificationRequest phoneVerificationRequest) {
+        try {
+            String phoneNumber = phoneVerificationRequest.getPhoneNumber();
+            String verificationCode = phoneVerificationRequest.getVerificationCode();
+
+            // Validate phone number format
+            if (!phoneNumber.matches(PHONE_REGEX)) {
+                return AuthResponse.failure("Invalid phone number format");
             }
 
-            String token = generateSimpleToken(user.getUsername());
-            tokenStore.put(token, user.getUsername());
+            // Find user by phone number
+            User user = userRepository.findByPhoneNumber(phoneNumber).orElse(null);
+            if (user == null) {
+                return AuthResponse.failure(ERROR_OCCURRED);
+            }
+
+            if (!user.isActive()) {
+                return AuthResponse.failure(ERROR_OCCURRED);
+            }
+
+            // Verify the code
+            boolean isCodeValid = phoneVerificationService.verifyCode(phoneNumber, verificationCode);
+            if (!isCodeValid) {
+                return AuthResponse.failure("Invalid or expired verification code");
+            }
+
+            // Mark phone as verified if not already
+            if (!user.isPhoneVerified()) {
+                user.setPhoneVerified(true);
+                userRepository.save(user);
+            }
+
+            // Generate and store authentication token
+            String token = tokenService.generateToken(user.getUsername());
+            tokenService.storeToken(token, user.getUsername());
             
-            log.info("User {} with role {} logged in successfully", user.getUsername(), user.getRole());
+            log.info("User {} with role {} logged in successfully via phone verification", user.getUsername(), user.getRole());
             return AuthResponse.success(user.getUsername(), token, user.getRole());
 
-        } catch (DisabledException | LockedException e) {
-            log.warn("Login attempt for deactivated user: {}", loginRequest.getUsername());
-            return AuthResponse.failure("User account is deactivated");
-        } catch (BadCredentialsException e) {
-            log.warn("Failed login attempt for username: {}", loginRequest.getUsername());
-            return AuthResponse.failure("Invalid username or password");
         } catch (Exception e) {
-            log.error("Login error for username: {}", loginRequest.getUsername(), e);
-            return AuthResponse.failure("Login failed");
+            log.error("Error verifying phone and login for phone number: {}", phoneVerificationRequest.getPhoneNumber(), e);
+            return AuthResponse.failure(ERROR_OCCURRED);
         }
     }
 
     @Override
     public AuthResponse logout(String token) {
         try {
-            String username = tokenStore.remove(token);
+            String username = tokenService.getUsernameFromToken(token);
             if (username != null) {
+                tokenService.removeToken(token);
                 SecurityContextHolder.clearContext();
                 log.info("User {} logged out successfully", username);
                 return new AuthResponse(null, username, "Logout successful", true);
@@ -102,60 +145,27 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    private String generateSimpleToken(String username) {
-        return "TOKEN_" + username + "_" + System.currentTimeMillis();
-    }
-
     public boolean isValidToken(String token) {
-        return tokenStore.containsKey(token);
+        return tokenService.isValidToken(token);
     }
 
     public String getUsernameFromToken(String token) {
-        return tokenStore.get(token);
+        return tokenService.getUsernameFromToken(token);
     }
 
     @Override
     public AuthResponse changePassword(String token, ChangePasswordRequest changePasswordRequest) {
-        try {
-            String username = getUsernameFromToken(token);
-            if (username == null) {
-                return AuthResponse.failure("Invalid or expired token");
-            }
-
-            if (!changePasswordRequest.getNewPassword().equals(changePasswordRequest.getConfirmPassword())) {
-                return AuthResponse.failure("New password and confirm password do not match");
-            }
-
-            User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new BadCredentialsException("User not found"));
-
-            if (!user.isActive()) {
-                return AuthResponse.failure("User account is deactivated");
-            }
-
-            if (!passwordEncoder.matches(changePasswordRequest.getCurrentPassword(), user.getPassword())) {
-                log.warn("Invalid current password attempt for user: {}", username);
-                return AuthResponse.failure("Current password is incorrect");
-            }
-
-            String encodedNewPassword = passwordEncoder.encode(changePasswordRequest.getNewPassword());
-            user.setPassword(encodedNewPassword);
-            userRepository.save(user);
-
-            log.info("Password changed successfully for user: {}", username);
-            return new AuthResponse(null, username, "Password changed successfully", true);
-
-        } catch (Exception e) {
-            log.error("Change password error", e);
-            return AuthResponse.failure("Failed to change password");
-        }
+        // Password change is no longer supported since we removed password authentication
+        return AuthResponse.failure("Password change is no longer supported. Authentication is now phone-based.");
     }
 
     @Override
     public AuthResponse signUp(SignUpRequest signUpRequest) {
         try {
-            if (!signUpRequest.getPassword().equals(signUpRequest.getConfirmPassword())) {
-                return AuthResponse.failure("Password and confirm password do not match");
+            // Validate phone number format
+            if (signUpRequest.getPhoneNumber() == null || 
+                !signUpRequest.getPhoneNumber().matches(PHONE_REGEX)) {
+                return AuthResponse.failure("Phone number is required and must start with 60 and contain 11-12 digits total");
             }
 
             if (userRepository.findByUsername(signUpRequest.getUsername()).isPresent()) {
@@ -164,6 +174,11 @@ public class AuthServiceImpl implements AuthService {
 
             if (personRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
                 return AuthResponse.failure("Email already exists");
+            }
+
+            // Check if phone number already exists
+            if (userRepository.existsByPhoneNumber(signUpRequest.getPhoneNumber())) {
+                return AuthResponse.failure("Phone number already exists");
             }
 
             Person person = new Person();
@@ -177,10 +192,10 @@ public class AuthServiceImpl implements AuthService {
 
             User user = new User();
             user.setUsername(signUpRequest.getUsername());
-            user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
             user.setPerson(savedPerson);
             user.setActive(true);
             user.setEmailVerified(false); // Will be verified via email
+            user.setPhoneVerified(false); // Will be verified when they first login
             user.setRole(Role.USER);
 
             User savedUser = userRepository.save(user);
@@ -191,7 +206,7 @@ public class AuthServiceImpl implements AuthService {
 
             log.info("New user registered: {}", signUpRequest.getUsername());
             return new AuthResponse(null, signUpRequest.getUsername(), 
-                "User registered successfully! Please check your email to verify your account.", true);
+                "User registered successfully! Please check your email to verify your account. Use your phone number to login.", true);
 
         } catch (Exception e) {
             log.error("Sign up error for username: {}", signUpRequest.getUsername(), e);
@@ -230,7 +245,7 @@ public class AuthServiceImpl implements AuthService {
             if (person == null) {
                 // Don't reveal if email exists or not for security
                 return new AuthResponse(null, null, 
-                    "If an account with this email exists, you will receive password reset instructions.", true);
+                    PASSWORD_RESET_MESSAGE, true);
             }
 
             User user = userRepository.findByUsername(person.getUser().getUsername())
@@ -238,7 +253,7 @@ public class AuthServiceImpl implements AuthService {
                 
             if (user == null || !user.isActive()) {
                 return new AuthResponse(null, null, 
-                    "If an account with this email exists, you will receive password reset instructions.", true);
+                    PASSWORD_RESET_MESSAGE, true);
             }
 
             // Generate password reset token and send email
@@ -247,7 +262,7 @@ public class AuthServiceImpl implements AuthService {
 
             log.info("Password reset requested for user: {}", user.getUsername());
             return new AuthResponse(null, null, 
-                "If an account with this email exists, you will receive password reset instructions.", true);
+                PASSWORD_RESET_MESSAGE, true);
 
         } catch (Exception e) {
             log.error("Forgot password error", e);
@@ -257,32 +272,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse resetPassword(ResetPasswordRequest resetPasswordRequest) {
-        try {
-            if (!resetPasswordRequest.getNewPassword().equals(resetPasswordRequest.getConfirmPassword())) {
-                return AuthResponse.failure("New password and confirm password do not match");
-            }
-
-            boolean tokenValid = verificationTokenService.verifyPasswordResetToken(resetPasswordRequest.getToken());
-            if (!tokenValid) {
-                return AuthResponse.failure("Invalid or expired reset token");
-            }
-
-            VerificationToken verificationToken = verificationTokenService.findByToken(resetPasswordRequest.getToken());
-            User user = verificationToken.getUser();
-
-            // Update password
-            user.setPassword(passwordEncoder.encode(resetPasswordRequest.getNewPassword()));
-            userRepository.save(user);
-
-            // Mark token as used
-            verificationTokenService.markTokenAsUsed(verificationToken);
-
-            log.info("Password reset successfully for user: {}", user.getUsername());
-            return new AuthResponse(null, user.getUsername(), "Password reset successful! You can now log in with your new password.", true);
-
-        } catch (Exception e) {
-            log.error("Password reset error", e);
-            return AuthResponse.failure("Password reset failed");
-        }
+        // Password reset is no longer supported since we removed password authentication
+        return AuthResponse.failure("Password reset is no longer supported. Authentication is now phone-based. Please use your phone number to login.");
     }
 }

@@ -1,42 +1,78 @@
 <div class="login-container">
   <div class="login-card">
-    <h2>Login</h2>
-    <form (ngSubmit)="onLogin()" #loginForm="ngForm">
-      <div class="form-group">
-        <label for="username">Username:</label>
-        <input
-          type="text"
-          id="username"
-          name="username"
-          [(ngModel)]="credentials.username"
-          required
-          class="form-control"
-        />
+    <h2>Login with Phone Number</h2>
+    
+    <!-- Step 1: Enter Phone Number -->
+    <div *ngIf="!codeSent">
+      <form (ngSubmit)="onSendCode()" #phoneForm="ngForm">
+        <div class="form-group">
+          <label for="phoneNumber">Phone Number:</label>
+          <input
+            type="text"
+            id="phoneNumber"
+            name="phoneNumber"
+            [(ngModel)]="phoneNumber"
+            placeholder="Example: 60123456789"
+            required
+            pattern="^60\d{9,10}$"
+            class="form-control"
+          />
+          <small class="form-hint">Enter your Malaysian phone number starting with 60</small>
+        </div>
+        
+        <button type="submit" [disabled]="!phoneForm.valid || isLoading" class="btn-primary">
+          {{isLoading ? 'Sending Code...' : 'Send Verification Code'}}
+        </button>
+      </form>
+    </div>
+
+    <!-- Step 2: Enter Verification Code -->
+    <div *ngIf="codeSent">
+      <div class="verification-info">
+        <p>We've sent a verification code to <strong>{{phoneNumber}}</strong></p>
+        <button type="button" class="btn-link" (click)="onBackToPhoneNumber()">Change phone number</button>
       </div>
       
-      <div class="form-group">
-        <label for="password">Password:</label>
-        <input
-          type="password"
-          id="password"
-          name="password"
-          [(ngModel)]="credentials.password"
-          required
-          class="form-control"
-        />
+      <form (ngSubmit)="onVerifyCode()" #codeForm="ngForm">
+        <div class="form-group">
+          <label for="verificationCode">Verification Code:</label>
+          <input
+            type="text"
+            id="verificationCode"
+            name="verificationCode"
+            [(ngModel)]="verificationCode"
+            placeholder="Enter 6-character code"
+            required
+            maxlength="6"
+            class="form-control verification-input"
+          />
+        </div>
+        
+        <button type="submit" [disabled]="!codeForm.valid || isLoading" class="btn-primary">
+          {{isLoading ? 'Verifying...' : 'Verify and Login'}}
+        </button>
+      </form>
+
+      <div class="resend-section">
+        <div *ngIf="countdown > 0" class="countdown">
+          Resend code in {{countdown}} seconds
+        </div>
+        <button 
+          *ngIf="canResendCode()" 
+          type="button" 
+          class="btn-link" 
+          (click)="onResendCode()"
+          [disabled]="isLoading">
+          Resend verification code
+        </button>
       </div>
-      
-      <button type="submit" [disabled]="!loginForm.valid || isLoading" class="btn-primary">
-        {{isLoading ? 'Logging in...' : 'Login'}}
-      </button>
-      
-      <div *ngIf="errorMessage" class="error-message">
-        {{errorMessage}}
-      </div>
-    </form>
+    </div>
+    
+    <div *ngIf="errorMessage" class="error-message">
+      {{errorMessage}}
+    </div>
 
     <div class="auth-links">
-      <p><a href="#" (click)="onForgotPassword()">Forgot Password?</a></p>
       <p>Don't have an account? <a href="#" (click)="onSignUp()">Sign up here</a></p>
     </div>
   </div>

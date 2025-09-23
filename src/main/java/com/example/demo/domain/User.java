@@ -21,9 +21,6 @@ public class User {
     @Column(unique = true)
     private String username;
 
-    @NotBlank
-    private String password;
-
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "person_id", referencedColumnName = "id")
     private Person person;
@@ -33,6 +30,9 @@ public class User {
 
     @Column(name = "email_verified", nullable = false)
     private boolean emailVerified = false;
+
+    @Column(name = "phone_verified", nullable = false)
+    private boolean phoneVerified = false;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "role")

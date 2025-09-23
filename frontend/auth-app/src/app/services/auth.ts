@@ -9,6 +9,15 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface PhoneLoginRequest {
+  phoneNumber: string;
+}
+
+export interface PhoneVerificationRequest {
+  phoneNumber: string;
+  verificationCode: string;
+}
+
 export interface AuthResponse {
   token: string | null;
   username: string | null;
@@ -28,10 +37,8 @@ export interface SignUpRequest {
   email: string;
   firstName: string;
   lastName: string;
-  phoneNumber?: string;
+  phoneNumber: string; // Now required
   address?: string;
-  password: string;
-  confirmPassword: string;
 }
 
 export interface ForgotPasswordRequest {
@@ -61,8 +68,34 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
+  // Legacy login method - deprecated
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.apiUrl}/login`, credentials)
+      .pipe(
+        map(response => {
+          if (response.success && response.token) {
+            localStorage.setItem('authToken', response.token);
+            if (response.username) {
+              localStorage.setItem('currentUser', response.username);
+            }
+            this.currentUserSubject.next(response.username);
+            if (response.role) {
+              localStorage.setItem('currentUserRole', response.role);
+              this.currentUserRoleSubject.next(response.role);
+            }
+          }
+          return response;
+        })
+      );
+  }
+
+  // New phone-based authentication methods
+  sendPhoneVerificationCode(phoneLoginRequest: PhoneLoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/phone/send-code`, phoneLoginRequest);
+  }
+
+  verifyPhoneAndLogin(phoneVerificationRequest: PhoneVerificationRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/phone/verify-login`, phoneVerificationRequest)
       .pipe(
         map(response => {
           if (response.success && response.token) {

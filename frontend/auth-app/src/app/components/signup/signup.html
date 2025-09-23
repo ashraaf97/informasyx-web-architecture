@@ -54,14 +54,17 @@
       </div>
 
       <div class="form-group">
-        <label for="phoneNumber">Phone Number</label>
+        <label for="phoneNumber">Phone Number *</label>
         <input 
           id="phoneNumber"
           name="phoneNumber"
           type="tel"
           [(ngModel)]="signUpData.phoneNumber"
+          required
+          pattern="^60\d{9,10}$"
           class="form-input"
-          placeholder="Enter phone number (optional)">
+          placeholder="Example: 60123456789">
+        <small class="form-hint">Enter your Malaysian phone number starting with 60</small>
       </div>
 
       <div class="form-group">
@@ -76,52 +79,8 @@
         </textarea>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="password">Password *</label>
-          <input 
-            id="password"
-            name="password"
-            [type]="showPassword ? 'text' : 'password'"
-            [(ngModel)]="signUpData.password"
-            required
-            class="form-input"
-            placeholder="Enter password">
-        </div>
-
-        <div class="form-group">
-          <label for="confirmPassword">Confirm Password *</label>
-          <input 
-            id="confirmPassword"
-            name="confirmPassword"
-            [type]="showPassword ? 'text' : 'password'"
-            [(ngModel)]="signUpData.confirmPassword"
-            required
-            class="form-input"
-            placeholder="Confirm password">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="checkbox-label">
-          <input 
-            type="checkbox" 
-            [(ngModel)]="showPassword"
-            name="showPassword"
-            (change)="togglePasswordVisibility()">
-          Show passwords
-        </label>
-      </div>
-
-      <div class="password-requirements">
-        <p><small>Password must:</small></p>
-        <ul>
-          <li>Be at least 8 characters long</li>
-          <li>Contain at least one uppercase letter</li>
-          <li>Contain at least one lowercase letter</li>
-          <li>Contain at least one number</li>
-          <li>Contain at least one special character (@$!%*?&)</li>
-        </ul>
+      <div class="info-message">
+        <p><small>Note: You will use your phone number to log in to your account.</small></p>
       </div>
 
       <div class="error-message" *ngIf="errorMessage">

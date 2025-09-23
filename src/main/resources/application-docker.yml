@@ -21,4 +21,33 @@ server:
 logging:
   level:
     org.springframework: INFO
-    com.example.demo: INFO 
+    com.example.demo: INFO
+
+# WhatsApp API Configuration
+whatsapp:
+  api:
+    endpoint: https://ustazai.my/send-message
+    key: ${WHATSAPP_API_KEY:}
+  sender:
+    number: ${WHATSAPP_SENDER_NUMBER:60123456789}
+
+# Phone Verification Configuration
+verification:
+  code:
+    expiry:
+      minutes: 5
+
+# Redis Configuration
+spring:
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DATABASE:0}
+
+# Token Configuration
+app:
+  token:
+    expiry:
+      hours: 24 

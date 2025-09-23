@@ -4,6 +4,8 @@ import com.example.demo.domain.dto.AuthResponse;
 import com.example.demo.domain.dto.ChangePasswordRequest;
 import com.example.demo.domain.dto.ForgotPasswordRequest;
 import com.example.demo.domain.dto.LoginRequest;
+import com.example.demo.domain.dto.PhoneLoginRequest;
+import com.example.demo.domain.dto.PhoneVerificationRequest;
 import com.example.demo.domain.dto.ResetPasswordRequest;
 import com.example.demo.domain.dto.SignUpRequest;
 import com.example.demo.service.AuthService;
@@ -34,9 +36,31 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "User login", description = "Authenticates user and returns auth token")
+    @Operation(summary = "User login (Deprecated)", description = "Legacy login method - no longer supported")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         AuthResponse response = authService.login(loginRequest);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/phone/send-code")
+    @Operation(summary = "Send phone verification code", description = "Sends verification code to phone number via WhatsApp")
+    public ResponseEntity<AuthResponse> sendPhoneVerificationCode(@Valid @RequestBody PhoneLoginRequest phoneLoginRequest) {
+        AuthResponse response = authService.sendPhoneVerificationCode(phoneLoginRequest);
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    @PostMapping("/phone/verify-login")
+    @Operation(summary = "Verify phone code and login", description = "Verifies phone verification code and logs in user")
+    public ResponseEntity<AuthResponse> verifyPhoneAndLogin(@Valid @RequestBody PhoneVerificationRequest phoneVerificationRequest) {
+        AuthResponse response = authService.verifyPhoneAndLogin(phoneVerificationRequest);
         if (response.isSuccess()) {
             return ResponseEntity.ok(response);
         } else {
